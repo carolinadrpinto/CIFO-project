@@ -2,46 +2,15 @@ import pandas as pd
 from copy import deepcopy
 import random
 from library.solution import Solution
+from itertools import combinations
 
-
-artists = pd.read_csv('data/artists(in).csv', index_col=0)
-conflicts = pd.read_csv('data/conflicts(in).csv')
-
-artists
-conflicts
-
-
-def get_dic(df, row):
-    dic={}
-    for i, value in enumerate(df[row].unique().tolist()):
-        temporary_dic={value: i}
-        dic.update(temporary_dic)
-    return dic
-
-dic_artists = get_dic(artists, 'name')
-dic_genre = get_dic(artists, 'genre')
-
-dic_genre
-artists
-
-
-artists_encoded=deepcopy(artists)
-artists_encoded['name'] = artists_encoded['name'].map(dic_artists)
-artists_encoded['genre'] = artists_encoded['genre'].map(dic_genre)
-artists_encoded
-artists_encoded.values.tolist()
-
-
-conflicts=conflicts.values.tolist()
-conflicts
-
-
+from df_load import artists_list, conflicts_matrix
 
 class LUSolution(Solution):
     def __init__(
         self,
-        artists=artists,
-        conflicts: list[list[float]] = conflicts,
+        artists: list[tuple[int]] = artists_list,
+        conflicts: list[list[float]] = conflicts_matrix,
         time_slots: int = 7,
         stages: int = 5,
         repr: str = None,
@@ -56,61 +25,92 @@ class LUSolution(Solution):
 
         super().__init__(repr=repr)
 
+    def __str__(self):
+        return '\n'.join(str(row) for row in self.repr)
+
+
 
     def _validate_repr(self, repr):
-        # If repr is given as string, convert to list
-        if isinstance(repr, str):
-            repr = [int(bit) for bit in repr]
-        if not isinstance(repr, list):
-            raise TypeError("Representation must be string or list")
-        # All list elements should be integers
-        if not all([isinstance(bit, int) for bit in repr]):
-            repr = [int(bit) for bit in repr]
-        # Validate representation length and content
-        if (len(repr) != len(self.values)) or (not set(repr).issubset({0, 1})):
-            raise ValueError("Representation must be a binary string/list with as many values as objects")
-        return repr
-
+        # Confirm repr is list
+        if isinstance(repr, list):
+            repr=[repr[i * self.time_slots:(i + 1) * self.time_slots] for i in range(self.stages)]
+        # Make sure repr is a matrix of integers
+        if not all(isinstance(idx, int) for row in repr for idx in row):
+            raise TypeError('Representation must be a matrix of integers')
+        # Validate matrix lenght
+        if (len(repr) != (self.stages)) or (len(repr[0]) != (self.time_slots)):
+            raise ValueError("The number of stages and time slots does not match the ones provided")
+        # Validate matrix content
+        if (set(idx for row in repr for idx in row) != set([i for i in range(len(self.artists))])):
+            raise ValueError("Matrix contain repeated artists")
+    
     def random_initial_representation(self):
         repr = []
-        for _ in range(len(self.values)):
-            repr.append(random.choice([0, 1]))
+        artists = list(range(35))
+        random.shuffle(artists)
+        repr = [artists[i * self.time_slots:(i + 1) * self.time_slots] for i in range(self.stages)]
         return repr
 
     def popularity_score(self):
-        pass
+        closers_scores = []
+        for stage in self.repr:
+            closer = stage[-1]        # in every stage get the last artist
+            closers_scores.append(self.artists[closer][2])   # get the popularity of the artist
+        optimal_pop = sorted([x[2] for x in self.artists], reverse=True)[:self.stages] # obtaining the best possible popularity
+                                                                                       # across all possible combinations
+        pop_score = sum(closers_scores) / sum(optimal_pop)    # divide the popularity of the closers by the optimal popularity
+        return pop_score
+
     def diversity_score(self):
-        pass
+        diversity_sums = []
+        for slot in zip(*self.repr):                   # * to transpose the matrix and analyze each slot
+            diff_genres = set()                          # create a new set for each slot
+            for artist in slot:
+                diff_genres.add(self.artists[artist][1])      # a new entry for every unique genre
+            diversity_sums.append(len(diff_genres) / self.stages)    # a score between 0 and 1 for each slot
+                                                                   # len(diff_genres) is how many unique genres are in the slot
+        diversity_score = sum(diversity_sums) / self.time_slots    
+        return diversity_score
+
     def conflict_score(self):    
-        pass
-    
+        conflict_sums = []                       # empty list to store conflicts of every slot
+        for slot in zip(*self.repr):           # iterate through slots (columns)
+            slot_conflicts = []                        # initialize list for every slot
+            for artist1, artist2 in combinations(slot, 2):       # all unique pairs
+                slot_conflicts.append(self.conflicts[artist1][artist2])  # get score
+            conflict_sums.append(sum(slot_conflicts) / len(slot_conflicts))    # divide by number of combinations to get average
+        worst_scenario = max(conflict_sums)
+        conflict_score = 1 - (sum(conflict_sums)/ worst_scenario)/ self.time_slots    # 1 - (average all slots / worst score in this solution)
+        return conflict_score
+            
+
     def fitness(self):
-        fitness=self.popularity_score()+self.diversity_score()+(1-self.conflict_score())       
+        fitness = (self.popularity_score()+self.diversity_score()+self.conflict_score()) / 3
         return fitness
 
 
 
-class LUGASolution(LUSolution):
-    def __init__(
-        self,
-        crossover_function,
-        mutation_function,
-        artists=artists,
-        conflicts: list[list[float]] = conflicts,
-        time_slots: int = 7,
-        stages: int = 5,
-        repr: str = None,
-    ):
+# class LUGASolution(LUSolution):
+#     def __init__(
+#         self,
+#         crossover_function,
+#         mutation_function,
+#         artists=artists,
+#         conflicts: list[list[float]] = conflicts,
+#         time_slots: int = 7,
+#         stages: int = 5,
+#         repr: str = None,
+#     ):
 
-        super().__init__(
-            artists=artists,
-            conflicts=conflicts,
-            time_slots=time_slots,
-            stages=stages,
-            repr=repr,
-            )
+#         super().__init__(
+#             artists=artists,
+#             conflicts=conflicts,
+#             time_slots=time_slots,
+#             stages=stages,
+#             repr=repr,
+#             )
         
-        self.mutation_function=mutation_function
-        self.crossover_function=crossover_function,
+#         self.mutation_function=mutation_function
+        # self.crossover_function=crossover_function,
 
 
