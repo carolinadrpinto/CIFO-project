@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 from copy import deepcopy
 
 artists = pd.read_csv('data/artists(in).csv', index_col=0)

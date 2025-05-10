@@ -1,10 +1,7 @@
-import pandas as pd
-from copy import deepcopy
 import random
 from library.solution import Solution
 from itertools import combinations
-
-from df_load import artists_list, conflicts_matrix
+from data.df_load import artists_list, conflicts_matrix
 
 class LUSolution(Solution):
     def __init__(
@@ -13,7 +10,7 @@ class LUSolution(Solution):
         conflicts: list[list[float]] = conflicts_matrix,
         time_slots: int = 7,
         stages: int = 5,
-        repr: str = None,
+        repr = None,
     ):
         self.artists=artists
         self.conflicts=conflicts
@@ -29,10 +26,10 @@ class LUSolution(Solution):
         return '\n'.join(str(row) for row in self.repr)
 
 
-
     def _validate_repr(self, repr):
         # Confirm repr is list
-        if isinstance(repr, list):
+        if isinstance(repr, list) and all(not isinstance(elem, list) for elem in repr):
+            print("Changing to list of lists")
             repr=[repr[i * self.time_slots:(i + 1) * self.time_slots] for i in range(self.stages)]
         # Make sure repr is a matrix of integers
         if not all(isinstance(idx, int) for row in repr for idx in row):
@@ -43,10 +40,11 @@ class LUSolution(Solution):
         # Validate matrix content
         if (set(idx for row in repr for idx in row) != set([i for i in range(len(self.artists))])):
             raise ValueError("Matrix contain repeated artists")
+        return repr
     
     def random_initial_representation(self):
         repr = []
-        artists = list(range(35))
+        artists = list(range(len(self.artists)))
         random.shuffle(artists)
         repr = [artists[i * self.time_slots:(i + 1) * self.time_slots] for i in range(self.stages)]
         return repr
@@ -90,27 +88,65 @@ class LUSolution(Solution):
 
 
 
-# class LUGASolution(LUSolution):
-#     def __init__(
-#         self,
-#         crossover_function,
-#         mutation_function,
-#         artists=artists,
-#         conflicts: list[list[float]] = conflicts,
-#         time_slots: int = 7,
-#         stages: int = 5,
-#         repr: str = None,
-#     ):
+class LUGASolution(LUSolution):
+    def __init__(
+        self,
+        crossover_function,
+        mutation_function,
+        artists: list[tuple[int]]=artists_list,
+        conflicts: list[list[float]] = conflicts_matrix,
+        time_slots: int = 7,
+        stages: int = 5,
+        repr = None,
+    ):
 
-#         super().__init__(
-#             artists=artists,
-#             conflicts=conflicts,
-#             time_slots=time_slots,
-#             stages=stages,
-#             repr=repr,
-#             )
+        super().__init__(
+            artists=artists,
+            conflicts=conflicts,
+            time_slots=time_slots,
+            stages=stages,
+            repr=repr,
+            )
         
-#         self.mutation_function=mutation_function
-        # self.crossover_function=crossover_function,
+        self.mutation_function=mutation_function
+        self.crossover_function=crossover_function
+
+    def mutation(self, mut_prob=0.3):
+
+        new_repr = self.mutation_function(self.repr, mut_prob)
+        return LUGASolution(
+            mutation_function=self.mutation_function,
+            crossover_function=self.crossover_function,
+            artists=self.artists,
+            conflicts=self.conflicts,
+            time_slots=self.time_slots,
+            stages=self.stages,
+            repr=new_repr
+        )
+    
+    def crossover(self, other_solution):
+        offspring1_repr, offspring2_repr = self.crossover_function(self.repr, other_solution.repr)
+        return(
+            LUGASolution(
+            mutation_function=self.mutation_function,
+            crossover_function=self.crossover_function,
+            artists=self.artists,
+            conflicts=self.conflicts,
+            time_slots=self.time_slots,
+            stages=self.stages,
+            repr=offspring1_repr,
+        ),
+        LUGASolution(
+            mutation_function=self.mutation_function,
+            crossover_function=self.crossover_function,
+            artists=self.artists,
+            conflicts=self.conflicts,
+            time_slots=self.time_slots,
+            stages=self.stages,
+            repr=offspring2_repr,
+        )
+        )
+
+
 
 

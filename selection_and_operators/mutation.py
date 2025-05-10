@@ -4,6 +4,7 @@ import random
 def swap_stages_slots_mutation(representation: list[list[int]], mut_prob=0.3):
 
     new_representation = deepcopy(representation)
+
     if random.random() <= mut_prob:
         stage1=random.randint(0, len(representation)-1)
         stage2=stage1
@@ -11,15 +12,14 @@ def swap_stages_slots_mutation(representation: list[list[int]], mut_prob=0.3):
         slot2=slot1
 
         # to guarantee we have different stages and different time slots
-        while((stage1==stage2) & (slot1==slot2)):
+        while((stage1==stage2) | (slot1==slot2)):
             stage2=random.randint(0,len(representation)-1)
             slot2=random.randint(0,len(representation[0])-1)
         
         # the new representation will swap the artists in the 2 stages and slots selected
         new_representation[stage1][slot1]=representation[stage2][slot2]
         new_representation[stage2][slot2]=representation[stage1][slot1]
-    
-    new_representation
+    return new_representation
 
 
 
@@ -48,7 +48,6 @@ def inversion_mutation(representation: list[list[int]], mut_prob=0.3, max_idx_di
         new_representation= [new_representation[i * columns:(i + 1) * columns] for i in range(rows)]
 
     return new_representation
-
 
 
 
