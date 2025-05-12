@@ -22,13 +22,19 @@ def ranking_selection(population: list[Solution], maximization: bool):
     #it can be tuned s
     s = 1.5  # s measures selection pressure,between: 1 for no selction pressure (all individuals are selected equally) and 2 for high selection pressure (best individual is twice as likely as the average)
     ranks_array = np.arange(population_size)
+    print('ranks_array:', ranks_array)
     probabilities = (2 - s)/population_size + (2 * ranks_array * (s - 1)) / (population_size * (population_size - 1))
+    print('prob1:', probabilities)
     probabilities = probabilities[::-1]  # reverse so that the the individual with rank 0 gets the highest probability of being chosen
-    
-    selected_indices = np.random.choice(population_size, size=population_size, p=probabilities)
-    parents = [deepcopy(ranking[i][0]) for i in selected_indices]
+    print('prob2:', probabilities)
 
-    return parents
+    selected_indices = np.random.choice(population_size, size=population_size, p=probabilities)
+    print('selected_indexs:', selected_indices)
+
+    parents = [deepcopy(ranking[i][0]) for i in selected_indices]
+    best=parents[0]
+
+    return deepcopy(best)
         
 
 def tournament_selection(population: list[Solution], maximization: bool): #30 to 40 % moderated pressure
