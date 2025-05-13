@@ -100,3 +100,60 @@ def cycle_crossover(parent1_repr: list[list[int]], parent2_repr: list[list[int]]
     offspring2_repr = [offspring2_repr[i*cols:(i+1)*cols] for i in range(rows)]
 
     return offspring1_repr, offspring2_repr  
+
+def partially_matched_crossover(parent1_repr, parent2_repr):
+    """
+    Performs Partially Matched Crossover (PMX) between two parents.
+
+    Partially Matched Crossover (PMX) is a crossover technique commonly used in permutation-based problems.
+    It ensures that the offspring generated are valid permutations by exchanging portions of the parents' genes.
+    PMX works by selecting two random crossover points within the parent representations, and exchanging the genetic material between these points.
+    The process uses a matching mechanism to ensure that the offspring does not contain repeated or missing genes.
+    This is achieved by creating a mapping of the genes from one parent to the other in the crossover region, and applying this mapping to fill the remaining spots in the offspring.
+
+    Args:
+        parent1_repr (list): The representation of the first parent, typically a list of values.
+        parent2_repr (list): The representation of the second parent, also a list of values.
+            Both parents must have the same length and type (typically, both are lists of integers or genes).
+        
+    Returns:
+        tuple: A pair of offspring generated from the crossover. Both offspring will be valid permutations,
+    """
+
+    if len(parent1_repr) != len(parent2_repr):
+        raise ValueError("Both parents must have the same number of elements.")
+
+    # Choose two crossover points
+    idx1 = random.randint(0, len(parent1_repr) - 1)
+    idx2 = random.randint(idx1 + 1, len(parent1_repr))  # Ensure idx2 is greater than idx1
+    
+    # Initialize offspring representations
+    offspring1_repr = [None] * len(parent1_repr)
+    offspring2_repr = [None] * len(parent2_repr)
+
+    # Copy the crossover subsequence directly from the parents to the offspring
+    offspring1_repr[idx1:idx2] = parent2_repr[idx1:idx2]
+    offspring2_repr[idx1:idx2] = parent1_repr[idx1:idx2]
+    
+    # Create mappings between parents
+    mapping1 = {parent1_repr[i]: parent2_repr[i] for i in range(idx1, idx2)}
+    mapping2 = {parent2_repr[i]: parent1_repr[i] for i in range(idx1, idx2)}
+    
+    # Fill the offspring with the remaining values, ensuring a valid permutation
+    def fill_offspring(offspring_repr, parent_repr, mapping, idx1, idx2):
+        for i in range(len(parent_repr)):
+            if i < idx1 or i >= idx2:
+                if offspring_repr[i] is None:
+                    gene = parent_repr[i]
+                    # Correct duplicated values using the mapping
+                    while gene in mapping.values():
+                        gene = mapping[gene]
+                    offspring_repr[i] = gene
+
+    # Fill the offspring with valid values
+    fill_offspring(offspring1_repr, parent1_repr, mapping1, idx1, idx2)
+    fill_offspring(offspring2_repr, parent2_repr, mapping2, idx1, idx2)
+    
+    return offspring1_repr, offspring2_repr
+
+
