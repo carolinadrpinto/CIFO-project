@@ -1,5 +1,5 @@
 import random
-
+from copy import deepcopy
 
 def cycle_crossover(parent1_repr: list[list[int]], parent2_repr: list[list[int]]):
 
@@ -50,6 +50,59 @@ def cycle_crossover(parent1_repr: list[list[int]], parent2_repr: list[list[int]]
     offspring2_repr = [offspring2_repr[i*cols:(i+1)*cols] for i in range(rows)]
 
     return offspring1_repr, offspring2_repr  
+
+def new_crossover(parent1_repr: list[list[int]], parent2_repr: list[list[int]]):
+    """
+    Performs a column-based crossover between two parent solutions.
+
+    The function selects a random column and swaps that column between the two parents
+    to create two offspring. Then it ensures that each offspring maintains
+    valid permutations by replacing any duplicated values (introduced by the swap) with 
+    the corresponding values that were eliminated initally.
+
+    Args:
+    parent1_repr (list of lists): The first parent representation.
+    parent2_repr (list of lists): The second parent representation.
+        Both parents must have the same length and type.
+
+    Returns:
+        tuple: Two offspring representations resulting from the crossover.
+    """
+    offspring1_repr = deepcopy(parent1_repr)
+    offspring2_repr = deepcopy(parent2_repr)
+    nlines, ncols = len(offspring1_repr), len(offspring1_repr[0])
+
+    # Choose a random column index to swap
+    col = random.randint(0, ncols - 1)
+    # Extract the column from each parent and store in a list
+    p1_col = []
+    p2_col = []
+    for line in range(nlines):
+        p1_col.append(parent1_repr[line][col])
+        p2_col.append(parent2_repr[line][col])
+
+    # Swap the selected column between the two offspring
+    for line in range(nlines):
+        offspring1_repr[line][col] = p2_col[line]
+        offspring2_repr[line][col] = p1_col[line]
+
+    # Resolve duplicates introduced by the swap
+    while len(p1_col) != 0:
+        n1 = p1_col[0]
+        n2 = p2_col[0]
+        for line in range(nlines):
+            for column in range(ncols):
+                if column == col:
+                    continue
+                else:
+                    if offspring1_repr[line][column] == n2:
+                        offspring1_repr[line][column] = p1_col[0]
+                    if offspring2_repr[line][column] == n1:
+                        offspring2_repr[line][column] = p2_col[0]
+        p1_col = p1_col[1:]
+        p2_col = p2_col[1:]
+
+    return offspring1_repr, offspring2_repr
 
 def partially_matched_crossover(parent1_repr: list[list[int]], parent2_repr: list[list[int]]):
 
