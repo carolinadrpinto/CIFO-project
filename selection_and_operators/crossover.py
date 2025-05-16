@@ -1,58 +1,8 @@
 import random
-
-def standard_crossover(parent1_repr, parent2_repr):
-    """
-    Performs standard one-point crossover on two parent representations.
-
-    This operator selects a random crossover point (not at the edges) and 
-    exchanges the tail segments of the two parents to produce two offspring. 
-    The crossover point is the same for both parents and ensures at least one 
-    gene is inherited from each parent before and after the point.
-
-    Parameters:
-        parent1_repr (str or list): The first parent representation.
-        parent2_repr (str or list): The second parent representation.
-            Both parents must have the same length and type.
-
-    Returns:
-        tuple: A pair of offspring representations (offspring1, offspring2), 
-        of the same type as the parents.
-
-    Raises:
-        ValueError: If parent representations are not the same length.
-    """
-
-    if not (isinstance(parent1_repr, list) or isinstance(parent1_repr, str)):
-        raise ValueError("Parent 1 representation must be a list or a string")
-    if not (isinstance(parent2_repr, list) or isinstance(parent2_repr, str)):
-        raise ValueError("Parent 1 representation must be a list or a string")
-    if len(parent1_repr) != len(parent2_repr):
-        raise ValueError("Parent 1 and Parent 2 representations must be the same length")
-
-    # Choose random crossover point
-    xo_point = random.randint(1, len(parent1_repr) - 1)
-
-    offspring1_repr = parent1_repr[:xo_point] + parent2_repr[xo_point:]
-    offspring2_repr = parent2_repr[:xo_point] + parent1_repr[xo_point:]
-
-    return offspring1_repr, offspring2_repr
+from copy import deepcopy
 
 def cycle_crossover(parent1_repr: list[list[int]], parent2_repr: list[list[int]]):
-    """
-    Performs Cycle Crossover (CX) between two parents
 
-    Cycle Crossover preserves the position of elements by identifying a cycle
-    of indices where the values from each parent will be inherited by each offspring.
-    The remaining indices are filled with values from the other parent, maintaining valid permutations.
-
-    Args:
-        parent1_repr (list of lists): The first parent representation.
-        parent2_repr (list of lists): The second parent representation.
-            Both parents must have the same length and type.
-
-    Returns:
-        tuple: Two offspring permutations resulting from the crossover.
-    """
     rows = len(parent1_repr)
     cols = len(parent1_repr[0])
 
@@ -101,58 +51,122 @@ def cycle_crossover(parent1_repr: list[list[int]], parent2_repr: list[list[int]]
 
     return offspring1_repr, offspring2_repr  
 
-def partially_matched_crossover(parent1_repr, parent2_repr):
+def new_crossover(parent1_repr: list[list[int]], parent2_repr: list[list[int]]):
     """
-    Performs Partially Matched Crossover (PMX) between two parents.
+    Performs a column-based crossover between two parent solutions.
 
-    Partially Matched Crossover (PMX) is a crossover technique commonly used in permutation-based problems.
-    It ensures that the offspring generated are valid permutations by exchanging portions of the parents' genes.
-    PMX works by selecting two random crossover points within the parent representations, and exchanging the genetic material between these points.
-    The process uses a matching mechanism to ensure that the offspring does not contain repeated or missing genes.
-    This is achieved by creating a mapping of the genes from one parent to the other in the crossover region, and applying this mapping to fill the remaining spots in the offspring.
+    The function selects a random column and swaps that column between the two parents
+    to create two offspring. Then it ensures that each offspring maintains
+    valid permutations by replacing any duplicated values (introduced by the swap) with 
+    the corresponding values that were eliminated initally.
 
     Args:
-        parent1_repr (list): The representation of the first parent, typically a list of values.
-        parent2_repr (list): The representation of the second parent, also a list of values.
-            Both parents must have the same length and type (typically, both are lists of integers or genes).
-        
-    Returns:
-        tuple: A pair of offspring generated from the crossover. Both offspring will be valid permutations,
-    """
+    parent1_repr (list of lists): The first parent representation.
+    parent2_repr (list of lists): The second parent representation.
+        Both parents must have the same length and type.
 
-    if len(parent1_repr) != len(parent2_repr):
+    Returns:
+        tuple: Two offspring representations resulting from the crossover.
+    """
+    offspring1_repr = deepcopy(parent1_repr)
+    offspring2_repr = deepcopy(parent2_repr)
+    nlines, ncols = len(offspring1_repr), len(offspring1_repr[0])
+
+    # Choose a random column index to swap
+    col = random.randint(0, ncols - 1)
+    # Extract the column from each parent and store in a list
+    p1_col = []
+    p2_col = []
+    for line in range(nlines):
+        p1_col.append(parent1_repr[line][col])
+        p2_col.append(parent2_repr[line][col])
+
+    # Swap the selected column between the two offspring
+    for line in range(nlines):
+        offspring1_repr[line][col] = p2_col[line]
+        offspring2_repr[line][col] = p1_col[line]
+
+    # Resolve duplicates introduced by the swap
+    while len(p1_col) != 0:
+        n1 = p1_col[0]
+        n2 = p2_col[0]
+        for line in range(nlines):
+            for column in range(ncols):
+                if column == col:
+                    continue
+                else:
+                    if offspring1_repr[line][column] == n2:
+                        offspring1_repr[line][column] = p1_col[0]
+                    if offspring2_repr[line][column] == n1:
+                        offspring2_repr[line][column] = p2_col[0]
+        p1_col = p1_col[1:]
+        p2_col = p2_col[1:]
+
+    return offspring1_repr, offspring2_repr
+
+def partially_matched_crossover(parent1_repr: list[list[int]], parent2_repr: list[list[int]]):
+
+    rows = len(parent1_repr)
+    cols = len(parent1_repr[0])
+
+    # Flatten
+    parent1_flat = [idx for row in parent1_repr for idx in row]
+    parent2_flat = [idx for row in parent2_repr for idx in row]
+
+    size=len(parent1_flat)
+
+    if size != len(parent2_flat):
         raise ValueError("Both parents must have the same number of elements.")
 
     # Choose two crossover points
-    idx1 = random.randint(0, len(parent1_repr) - 1)
-    idx2 = random.randint(idx1 + 1, len(parent1_repr))  # Ensure idx2 is greater than idx1
+    idx1 = random.randint(0, size - 1)
+    idx2 = idx1
+
+    while abs(idx1-idx2)==0:
+        idx2=random.randint(0, size - 1)
+
+    if idx1 > idx2:
+        idx1, idx2 = idx2, idx1
     
     # Initialize offspring representations
-    offspring1_repr = [None] * len(parent1_repr)
-    offspring2_repr = [None] * len(parent2_repr)
+    offspring1_repr = [None] * size
+    offspring2_repr = [None] * size
 
     # Copy the crossover subsequence directly from the parents to the offspring
-    offspring1_repr[idx1:idx2] = parent2_repr[idx1:idx2]
-    offspring2_repr[idx1:idx2] = parent1_repr[idx1:idx2]
-    
-    # Create mappings between parents
-    mapping1 = {parent1_repr[i]: parent2_repr[i] for i in range(idx1, idx2)}
-    mapping2 = {parent2_repr[i]: parent1_repr[i] for i in range(idx1, idx2)}
-    
-    # Fill the offspring with the remaining values, ensuring a valid permutation
-    def fill_offspring(offspring_repr, parent_repr, mapping, idx1, idx2):
-        for i in range(len(parent_repr)):
-            if i < idx1 or i >= idx2:
-                if offspring_repr[i] is None:
-                    gene = parent_repr[i]
-                    # Correct duplicated values using the mapping
-                    while gene in mapping.values():
-                        gene = mapping[gene]
-                    offspring_repr[i] = gene
+    offspring1_repr[idx1:idx2] = parent2_flat[idx1:idx2]
+    offspring2_repr[idx1:idx2] = parent1_flat[idx1:idx2]
 
-    # Fill the offspring with valid values
-    fill_offspring(offspring1_repr, parent1_repr, mapping1, idx1, idx2)
-    fill_offspring(offspring2_repr, parent2_repr, mapping2, idx1, idx2)
+    print(offspring1_repr)
+    print(offspring2_repr)
+
+    #setting the replacement that should take place if a value is already in the crossover segment
+    parent1_mapping = {parent2_flat[i]: parent1_flat[i] for i in range(idx1, idx2)} 
+    parent2_mapping = {parent1_flat[i]: parent2_flat[i] for i in range(idx1, idx2)}
+
+    #function that will check each gene and copy it if it doesn't already exist in the crossover segment or replace it if it exists
+    def value_checking(parent_mapping, value):
+        while value in parent_mapping:
+            value = parent_mapping[value]
+        return value
+
+    #loop that goes through each gene
+    for i in list(range(0, idx1)) + list(range(idx2, size)):
+        value_parent1 = value_checking(parent1_mapping, parent1_flat[i])
+        value_parent2 = value_checking(parent2_mapping, parent2_flat[i])
+        offspring1_repr[i] = value_parent1
+        offspring2_repr[i] = value_parent2
+
+    print(set(offspring1_repr))
+    print(set(offspring2_repr))
+
+    # Offsprings back to matrix
+    offspring1_repr = [offspring1_repr[i*cols:(i+1)*cols] for i in range(rows)]
+    offspring2_repr = [offspring2_repr[i*cols:(i+1)*cols] for i in range(rows)]
+
+    print(f"offspring in the end: {offspring1_repr}")
+    print(f" offspreing in the end{offspring2_repr}")
+
+
     
     return offspring1_repr, offspring2_repr
 
