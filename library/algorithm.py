@@ -14,9 +14,12 @@ def genetic_algorithm(
     initial_population: list[Solution],
     max_gen: int,
     selection_algorithm: Callable,
+    s_ranking_selection = 1,
+    k_tournment_selection = 2,
     maximization: bool = False,
     xo_prob: float = 0.9,
     mut_prob: float = 0.2,
+    mut_max_window_size=5,
     elitism: bool = True,
     verbose: bool = False,
 ):
@@ -55,8 +58,18 @@ def genetic_algorithm(
         # 2.3. Repeat until P' contains N individuals
         while len(new_population) < len(population):
             # 2.3.1. Choose 2 individuals from P using a selection algorithm
-            first_ind = selection_algorithm(population, maximization)
-            second_ind = selection_algorithm(population, maximization)
+
+            if  selection_algorithm.__name__ == 'ranking_selection':
+                first_ind = selection_algorithm(population, maximization, s_ranking_selection)
+                second_ind = selection_algorithm(population, maximization, s_ranking_selection)
+            
+            elif selection_algorithm.__name__ == 'tournament_selection':
+                first_ind = selection_algorithm(population, maximization, k_tournment_selection)
+                second_ind = selection_algorithm(population, maximization, k_tournment_selection)
+
+            else:
+                first_ind = selection_algorithm(population, maximization)
+                second_ind = selection_algorithm(population, maximization)
 
             if verbose:
                 print(f'Selected individuals: First:\n{first_ind}\nSecond:{second_ind}')
@@ -76,7 +89,7 @@ def genetic_algorithm(
                 print(f'Offspring:\n{offspring1}\n{offspring2}')
             
             # 2.3.4. Apply mutation to the offspring
-            first_new_ind = offspring1.mutation(mut_prob)
+            first_new_ind = offspring1.mutation(mut_prob, mut_max_window_size)
             # 2.3.5. Insert the mutated individuals into P'
             new_population.append(first_new_ind)
 
@@ -94,7 +107,7 @@ def genetic_algorithm(
 
         fitness_history.append(get_best_ind(population, maximization).fitness())
         # if verbose:
-        print(f'Final best individual in generation: {get_best_ind(population, maximization).fitness()}')
+        print(f'Final best individual in generation {gen}: {get_best_ind(population, maximization).fitness()}')
 
     # 3. Return the best individual in P
     return get_best_ind(population, maximization), fitness_history

@@ -8,7 +8,7 @@ from library.solution import Solution
 
 #Solution has to return me a matrix and has to have a method fitness
 
-def ranking_selection(population: list[Solution], maximization: bool):
+def ranking_selection(population: list[Solution], maximization: bool, s=1.5):
     fitness_values= [ind.fitness() for ind in population]
 
     if maximization:
@@ -20,7 +20,6 @@ def ranking_selection(population: list[Solution], maximization: bool):
 
     population_size = len(ranking)
     #it can be tuned s
-    s = 1.5  # s measures selection pressure,between: 1 for no selction pressure (all individuals are selected equally) and 2 for high selection pressure (best individual is twice as likely as the average)
     ranks_array = np.arange(population_size)
     print('ranks_array:', ranks_array)
     probabilities = (2 - s)/population_size + (2 * ranks_array * (s - 1)) / (population_size * (population_size - 1))
@@ -37,9 +36,8 @@ def ranking_selection(population: list[Solution], maximization: bool):
     return deepcopy(best)
         
 
-def tournament_selection(population: list[Solution], maximization: bool): #30 to 40 % moderated pressure
+def tournament_selection(population: list[Solution], maximization: bool, k=2): #30 to 40 % moderated pressure
     population_size = len(population)
-    k = max(2, int(0.35 * population_size))
 
     for _ in range(population_size):
         tournament_participants = np.random.choice(population, size=k, replace=False)        

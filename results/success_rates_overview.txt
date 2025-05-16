@@ -1,0 +1,3 @@
+: 0.2000
+swap_stages_slots_mutation__partially_matched_crossover: 0.5000
+swap_stages_slots_mutation__partially_matched_crossover: 0.5000

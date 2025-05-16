@@ -1,7 +1,7 @@
 from copy import deepcopy
 import random
 
-def swap_stages_slots_mutation(representation: list[list[int]], mut_prob=0.3):
+def swap_stages_slots_mutation(representation: list[list[int]], mut_prob=0.3, max_window_size=None):
 
     new_representation = deepcopy(representation)
 
@@ -23,7 +23,7 @@ def swap_stages_slots_mutation(representation: list[list[int]], mut_prob=0.3):
 
 
 
-def inversion_mutation(representation: list[list[int]], mut_prob=0.3, max_idx_distance=10):
+def inversion_mutation(representation: list[list[int]], mut_prob=0.3, max_window_size=10):
 
     new_representation = deepcopy(representation)
     if random.random() <= mut_prob:
@@ -35,19 +35,26 @@ def inversion_mutation(representation: list[list[int]], mut_prob=0.3, max_idx_di
         idx_2=idx_1
 
         # to guarantee that the indexes are different and do not have a distance greater than 10 
-        while((abs(idx_1-idx_2)==0) | (abs(idx_1-idx_2)>max_idx_distance)):
-            idx_2=random.randint(0, len(representation)-1)
+        while((abs(idx_1-idx_2)==0)):
+            new_rand_int=random.randint(2, max_window_size)
+            if (idx_1+new_rand_int<=34):
+                idx_2=idx_1+new_rand_int
+            else:
+                idx_2=idx_1-new_rand_int
         
         if idx_1 > idx_2:
             idx_1, idx_2 = idx_2, idx_1
         
         reversed_subsequence = list(reversed(new_representation[idx_1:idx_2]))
-        new_representation = representation[:idx_1] + reversed_subsequence + representation[idx_2:]
-
+        print('reversed_subsequence: ', reversed_subsequence)
+        new_representation_final = new_representation[:idx_1] + reversed_subsequence + new_representation[idx_2:]
+        print('new_representatio1:, ', new_representation_final)
         # Back to a matrix
-        new_representation= [new_representation[i * columns:(i + 1) * columns] for i in range(rows)]
+        new_representation_return = [new_representation_final[i * columns:(i + 1) * columns] for i in range(rows)]
+        print('new_representatio2:, ', new_representation_return)
 
-    return new_representation
+
+    return new_representation_return
 
 
 
@@ -66,16 +73,22 @@ def shuffle_mutation(representation: list[list[int]], mut_prob=0.3, max_window_s
         idx_2=idx_1
 
         # 
-        while((abs(idx_1-idx_2)==0) | (abs(idx_1-idx_2)>max_window_size)):
-            idx_2=random.randint(0, len(representation)-1)
+        # to guarantee that the indexes are different and do not have a distance greater than 10 
+        while((abs(idx_1-idx_2)==0)):
+            new_rand_int=random.randint(2, max_window_size)
+            if (idx_1+new_rand_int<=34):
+                idx_2=idx_1+new_rand_int
+            else:
+                idx_2=idx_1-new_rand_int
         
         if idx_1 > idx_2:
             idx_1, idx_2 = idx_2, idx_1
+
         
         shuffled_subsequence1=representation[stage1][idx_1:idx_2]
-        random.shuffe(shuffled_subsequence1)
+        random.shuffle(shuffled_subsequence1)
         shuffled_subsequence2=representation[stage2][idx_1:idx_2]
-        random.shuffe(shuffled_subsequence2)
+        random.shuffle(shuffled_subsequence2)
 
         new_representation[stage1]=representation[stage1][:idx_1] + shuffled_subsequence1 + representation[stage1][idx_2:]
         new_representation[stage2]=representation[stage2][:idx_1] + shuffled_subsequence2 + representation[stage2][idx_2:]
