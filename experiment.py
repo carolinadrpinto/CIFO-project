@@ -67,11 +67,13 @@ VERBOSE = False,
     fitness_array = np.array(fitness_histories)
 
     fitness_avg = np.mean(fitness_array, axis=0)
+    fitness_median = np.median(fitness_array, axis=0)
     fitness_std = np.std(fitness_array, axis=0)
 
     stats_df = pd.DataFrame({
         "Generation": np.arange(MAX_GEN),
         "Fitness_Mean": fitness_avg,
+        "Fitness_Median": fitness_median,
         "Fitness_Std": fitness_std
     })
 
@@ -92,6 +94,7 @@ VERBOSE = False,
     "name": EXPERIMENT_NAME,
     "fitness_array": fitness_array,
     "fitness_avg": fitness_avg,
+    "fitness_median": fitness_median,
     "fitness_std": fitness_std,
     "success_rate": success_rate,
     "stats_df": stats_df

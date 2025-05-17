@@ -34,7 +34,7 @@ def inversion_mutation(representation: list[list[int]], mut_prob=0.3, max_window
         idx_1=random.randint(0, len(new_representation)-1)
         idx_2=idx_1
 
-        # to guarantee that the indexes are different and do not have a distance greater than 10 
+        # to guarantee that the indexes are different and do not have a distance greater than window_size
         while((abs(idx_1-idx_2)==0)):
             new_rand_int=random.randint(2, max_window_size)
             if (idx_1+new_rand_int<=34):
@@ -46,15 +46,14 @@ def inversion_mutation(representation: list[list[int]], mut_prob=0.3, max_window
             idx_1, idx_2 = idx_2, idx_1
         
         reversed_subsequence = list(reversed(new_representation[idx_1:idx_2]))
-        print('reversed_subsequence: ', reversed_subsequence)
         new_representation_final = new_representation[:idx_1] + reversed_subsequence + new_representation[idx_2:]
-        print('new_representatio1:, ', new_representation_final)
+
         # Back to a matrix
         new_representation_return = [new_representation_final[i * columns:(i + 1) * columns] for i in range(rows)]
-        print('new_representatio2:, ', new_representation_return)
 
 
-    return new_representation_return
+        return new_representation_return
+    return new_representation
 
 
 

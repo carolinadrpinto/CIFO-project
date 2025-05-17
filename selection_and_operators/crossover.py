@@ -1,5 +1,7 @@
 import random
 from copy import deepcopy
+from collections import Counter
+
 
 def cycle_crossover(parent1_repr: list[list[int]], parent2_repr: list[list[int]]):
 
@@ -51,7 +53,147 @@ def cycle_crossover(parent1_repr: list[list[int]], parent2_repr: list[list[int]]
 
     return offspring1_repr, offspring2_repr  
 
-def new_crossover(parent1_repr: list[list[int]], parent2_repr: list[list[int]]):
+
+def partially_matched_crossover(parent1_repr: list[list[int]], parent2_repr: list[list[int]]):
+
+    rows = len(parent1_repr)
+    cols = len(parent1_repr[0])
+
+    # Flatten
+    parent1_flat = [idx for row in parent1_repr for idx in row]
+    parent2_flat = [idx for row in parent2_repr for idx in row]
+
+    size=len(parent1_flat)
+
+    if size != len(parent2_flat):
+        raise ValueError("Both parents must have the same number of elements.")
+
+    # Choose two crossover points
+    idx1 = random.randint(0, size - 1)
+    idx2 = idx1
+
+    while abs(idx1-idx2)==0:
+        idx2=random.randint(0, size - 1)
+
+    if idx1 > idx2:
+        idx1, idx2 = idx2, idx1
+    
+    # Initialize offspring representations
+    offspring1_repr = [None] * size
+    offspring2_repr = [None] * size
+
+    # Copy the crossover subsequence directly from the parents to the offspring
+    offspring1_repr[idx1:idx2] = parent2_flat[idx1:idx2]
+    offspring2_repr[idx1:idx2] = parent1_flat[idx1:idx2]
+
+
+    #setting the replacement that should take place if a value is already in the crossover segment
+    parent1_mapping = {parent2_flat[i]: parent1_flat[i] for i in range(idx1, idx2)} 
+    parent2_mapping = {parent1_flat[i]: parent2_flat[i] for i in range(idx1, idx2)}
+
+    #function that will check each gene and copy it if it doesn't already exist in the crossover segment or replace it if it exists
+    def value_checking(parent_mapping, value):
+        while value in parent_mapping:
+            value = parent_mapping[value]
+        return value
+
+    #loop that goes through each gene
+    for i in list(range(0, idx1)) + list(range(idx2, size)):
+        value_parent1 = value_checking(parent1_mapping, parent1_flat[i])
+        value_parent2 = value_checking(parent2_mapping, parent2_flat[i])
+        offspring1_repr[i] = value_parent1
+        offspring2_repr[i] = value_parent2
+
+
+    # Offsprings back to matrix
+    offspring1_repr = [offspring1_repr[i*cols:(i+1)*cols] for i in range(rows)]
+    offspring2_repr = [offspring2_repr[i*cols:(i+1)*cols] for i in range(rows)]
+
+    
+    return offspring1_repr, offspring2_repr
+
+
+
+
+def swap_time_slots_crossover(parent1_repr: list[list[int]], parent2_repr: list[list[int]]):
+    """
+    Performs a column-based crossover between two parent solutions.
+
+    The function selects a random column and swaps that column between the two parents
+    to create two offspring. Then it ensures that each offspring maintains
+    valid permutations by replacing any duplicated values (introduced by the swap) with 
+    the corresponding values that were eliminated initally.
+
+    Args:
+    parent1_repr (list of lists): The first parent representation.
+    parent2_repr (list of lists): The second parent representation.
+        Both parents must have the same length and type.
+
+    Returns:
+        Two offspring representations resulting from the crossover.
+    """
+    offspring1_repr = deepcopy(parent1_repr)
+    offspring2_repr = deepcopy(parent2_repr)
+    nlines, ncols = len(offspring1_repr), len(offspring1_repr[0])
+
+    # Choose a random column index to swap
+    col = random.randint(0, ncols - 1)
+    # Extract the column from each parent and store in a list
+    p1_col = []
+    p2_col = []
+    for line in range(nlines):
+        p1_col.append(parent1_repr[line][col])
+        p2_col.append(parent2_repr[line][col])
+
+    # Swap the selected column between the two offspring
+    for line in range(nlines):
+        offspring1_repr[line][col] = p2_col[line]
+        offspring2_repr[line][col] = p1_col[line]
+    
+
+    total_vals = nlines * ncols
+    all_vals = set(range(total_vals))
+
+    def fix_global_duplicates(matrix):
+        flat = [val for row in matrix for val in row]
+        freq = Counter(flat)
+        # duplicates = [val for val, count in freq.items() if count > 1]
+        missing = list(all_vals - set(flat))
+
+        i_missing = 0
+        used = set()
+        for row in range(nlines):
+            for col in range(ncols):
+                val = matrix[row][col]
+                if freq[val] > 1 and (row, col) not in used:
+                    matrix[row][col] = missing[i_missing]
+                    freq[val] -= 1
+                    freq[missing[i_missing]] = 1
+                    i_missing += 1
+                    used.add((row, col))
+
+        return matrix
+    
+    offspring1_repr = fix_global_duplicates(offspring1_repr)
+    offspring2_repr = fix_global_duplicates(offspring2_repr)
+
+
+    return offspring1_repr, offspring2_repr
+
+
+
+
+
+
+
+
+
+
+
+# tentei dar fix mas ainda não está
+'''
+
+def swap_column_crossover(parent1_repr: list[list[int]], parent2_repr: list[list[int]]):
     """
     Performs a column-based crossover between two parent solutions.
 
@@ -87,87 +229,101 @@ def new_crossover(parent1_repr: list[list[int]], parent2_repr: list[list[int]]):
         offspring2_repr[line][col] = p1_col[line]
 
     # Resolve duplicates introduced by the swap
-    while len(p1_col) != 0:
-        n1 = p1_col[0]
-        n2 = p2_col[0]
-        for line in range(nlines):
-            for column in range(ncols):
-                if column == col:
-                    continue
-                else:
-                    if offspring1_repr[line][column] == n2:
-                        offspring1_repr[line][column] = p1_col[0]
-                    if offspring2_repr[line][column] == n1:
-                        offspring2_repr[line][column] = p2_col[0]
-        p1_col = p1_col[1:]
-        p2_col = p2_col[1:]
+    # while len(p1_col) != 0:
+    #     n1 = p1_col[0]
+    #     n2 = p2_col[0]
+
+
+    p1_col_aux=deepcopy(p1_col)
+    p2_col_aux=deepcopy(p2_col)
+    
+    used_p1 = set()
+    used_p2 = set()
+    for line in range(nlines):
+        for column in range(ncols):
+            if column == col:
+                continue
+            # Fix offspring 1
+            if offspring1_repr[line][column] in p2_col:
+                for val in p1_col_aux:
+                    if val not in used_p1:
+                        offspring1_repr[line][column] = val
+                        used_p1.add(val)
+                        break
+
+            # Fix offspring 2
+            if offspring2_repr[line][column] in p1_col:
+                for val in p2_col_aux:
+                    if val not in used_p2:
+                        offspring2_repr[line][column] = val
+                        used_p2.add(val)
+                        break
+    
+    print(f"col swap: {col}")
+
+    print(f"parent1: {parent1_repr}")
+    print(f"parent2: {parent2_repr}")
+
+    print(f"offspring1 in the end: {offspring1_repr}")
+    print(f" offspring2 in the end{offspring2_repr}")
 
     return offspring1_repr, offspring2_repr
-
-def partially_matched_crossover(parent1_repr: list[list[int]], parent2_repr: list[list[int]]):
-
-    rows = len(parent1_repr)
-    cols = len(parent1_repr[0])
-
-    # Flatten
-    parent1_flat = [idx for row in parent1_repr for idx in row]
-    parent2_flat = [idx for row in parent2_repr for idx in row]
-
-    size=len(parent1_flat)
-
-    if size != len(parent2_flat):
-        raise ValueError("Both parents must have the same number of elements.")
-
-    # Choose two crossover points
-    idx1 = random.randint(0, size - 1)
-    idx2 = idx1
-
-    while abs(idx1-idx2)==0:
-        idx2=random.randint(0, size - 1)
-
-    if idx1 > idx2:
-        idx1, idx2 = idx2, idx1
-    
-    # Initialize offspring representations
-    offspring1_repr = [None] * size
-    offspring2_repr = [None] * size
-
-    # Copy the crossover subsequence directly from the parents to the offspring
-    offspring1_repr[idx1:idx2] = parent2_flat[idx1:idx2]
-    offspring2_repr[idx1:idx2] = parent1_flat[idx1:idx2]
-
-    print(offspring1_repr)
-    print(offspring2_repr)
-
-    #setting the replacement that should take place if a value is already in the crossover segment
-    parent1_mapping = {parent2_flat[i]: parent1_flat[i] for i in range(idx1, idx2)} 
-    parent2_mapping = {parent1_flat[i]: parent2_flat[i] for i in range(idx1, idx2)}
-
-    #function that will check each gene and copy it if it doesn't already exist in the crossover segment or replace it if it exists
-    def value_checking(parent_mapping, value):
-        while value in parent_mapping:
-            value = parent_mapping[value]
-        return value
-
-    #loop that goes through each gene
-    for i in list(range(0, idx1)) + list(range(idx2, size)):
-        value_parent1 = value_checking(parent1_mapping, parent1_flat[i])
-        value_parent2 = value_checking(parent2_mapping, parent2_flat[i])
-        offspring1_repr[i] = value_parent1
-        offspring2_repr[i] = value_parent2
-
-    print(set(offspring1_repr))
-    print(set(offspring2_repr))
-
-    # Offsprings back to matrix
-    offspring1_repr = [offspring1_repr[i*cols:(i+1)*cols] for i in range(rows)]
-    offspring2_repr = [offspring2_repr[i*cols:(i+1)*cols] for i in range(rows)]
-
-    print(f"offspring in the end: {offspring1_repr}")
-    print(f" offspreing in the end{offspring2_repr}")
+'''
 
 
-    
-    return offspring1_repr, offspring2_repr
 
 
+
+
+# def new_crossover(parent1_repr: list[list[int]], parent2_repr: list[list[int]]):
+#     """
+#     Performs a column-based crossover between two parent solutions.
+
+#     The function selects a random column and swaps that column between the two parents
+#     to create two offspring. Then it ensures that each offspring maintains
+#     valid permutations by replacing any duplicated values (introduced by the swap) with 
+#     the corresponding values that were eliminated initally.
+
+#     Args:
+#     parent1_repr (list of lists): The first parent representation.
+#     parent2_repr (list of lists): The second parent representation.
+#         Both parents must have the same length and type.
+
+#     Returns:
+#         tuple: Two offspring representations resulting from the crossover.
+#     """
+#     offspring1_repr = deepcopy(parent1_repr)
+#     offspring2_repr = deepcopy(parent2_repr)
+#     nlines, ncols = len(offspring1_repr), len(offspring1_repr[0])
+
+#     # Choose a random column index to swap
+#     col = random.randint(0, ncols - 1)
+#     # Extract the column from each parent and store in a list
+#     p1_col = []
+#     p2_col = []
+#     for line in range(nlines):
+#         p1_col.append(parent1_repr[line][col])
+#         p2_col.append(parent2_repr[line][col])
+
+#     # Swap the selected column between the two offspring
+#     for line in range(nlines):
+#         offspring1_repr[line][col] = p2_col[line]
+#         offspring2_repr[line][col] = p1_col[line]
+
+#     # Resolve duplicates introduced by the swap
+#     while len(p1_col) != 0:
+#         n1 = p1_col[0]
+#         n2 = p2_col[0]
+#         for line in range(nlines):
+#             for column in range(ncols):
+#                 if column == col:
+#                     continue
+#                 else:
+#                     if offspring1_repr[line][column] == n2:
+#                         offspring1_repr[line][column] = p1_col[0]
+#                     if offspring2_repr[line][column] == n1:
+#                         offspring2_repr[line][column] = p2_col[0]
+#         p1_col = p1_col[1:]
+#         p2_col = p2_col[1:]
+
+#     return offspring1_repr, offspring2_repr
