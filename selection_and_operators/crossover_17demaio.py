@@ -162,54 +162,34 @@ def swap_time_slots_crossover(parent1_repr: list[list[int]], parent2_repr: list[
         offspring2_repr[line][col] = p1_col[line]
     
 
-    total_vals = nlines * ncols
-    all_vals = set(range(total_vals))
+    def fix_row_duplicates(offspring, original_col, swapped_col_index, nlines,ncols):
+        total_vals = nlines * ncols
+        all_vals = set(range(total_vals))
 
-    def fix_global_duplicates(matrix):
-        flat = [val for row in matrix for val in row]
-        freq = Counter(flat)
-        # duplicates = [val for val, count in freq.items() if count > 1]
-        missing = list(all_vals - set(flat))
+        for i in range(nlines):
+            row_vals = {offspring[i][swapped_col_index]}
+            for j in range(ncols):
+                if j == swapped_col_index:
+                    continue  
+                val = offspring[i][j]
+                if val in row_vals:
+                    offspring[i][j] = original_col[i]
+                    row_vals.add(original_col[i])
+                else:
+                    row_vals.add(val)
 
+        #check global uniqueness
+        flat = [val for row in offspring for val in row]
+        if set(flat) != all_vals:
+            raise ValueError("Duplicates and missing values still exist")
 
-        i_missing = 0
-        for row in range(nlines):
-            for col in range(ncols):
-                val = matrix[row][col]
-                if freq[val] > 1:
-                    if i_missing >= len(missing):
-                        raise ValueError("More duplicates than missing values!")
-                    matrix[row][col] = missing[i_missing]
-                    freq[val] -= 1
-                    freq[missing[i_missing]] = 1
-                    i_missing += 1
-
+        return offspring
     
-        if i_missing != len(missing):
-            print("Not all missing values were used")
+    offspring1_repr = fix_row_duplicates(offspring1_repr, p1_col, col, nlines, ncols)
+    offspring2_repr = fix_row_duplicates(offspring2_repr, p2_col, col, nlines, ncols)
 
-        #i_missing = 0
-        #used = set()
-        #for row in range(nlines):
-            #for col in range(ncols):
-                #val = matrix[row][col]
-                #if freq[val] > 1 and (row, col) not in used:
-                    #matrix[row][col] = missing[i_missing]
-                    #freq[val] -= 1
-                    #freq[missing[i_missing]] = 1
-                    #i_missing += 1
-                    #used.add((row, col))
-
-        return matrix
-    
-    offspring1_repr = fix_global_duplicates(offspring1_repr)
-    offspring2_repr = fix_global_duplicates(offspring2_repr)
-
-
+   
     return offspring1_repr, offspring2_repr
-
-
-
 
 
 
