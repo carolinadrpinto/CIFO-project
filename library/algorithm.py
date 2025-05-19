@@ -1,5 +1,6 @@
 import random
 from copy import deepcopy
+import numpy as np
 from library.solution import Solution
 from typing import Callable
 
@@ -111,3 +112,177 @@ def genetic_algorithm(
 
     # 3. Return the best individual in P
     return get_best_ind(population, maximization), fitness_history
+
+
+
+def hill_climbing(initial_solution: Solution, maximization=False, max_iter=99999, verbose=False):
+    """
+    Implementation of the Hill Climbing optimization algorithm.  
+
+    The algorithm iteratively explores the neighbors of the current solution, moving to a neighbor if it improves the objective function.  
+    The process continues until no improvement is found or the maximum number of iterations is reached.  
+
+    Args:
+        initial_solution (Solution): The starting solution, which must implement the `fitness()` and `get_neighbors()` methods.
+        maximization (bool, optional): If True, the algorithm maximizes the fitness function; otherwise, it minimizes it. Defaults to False.
+        max_iter (int, optional): The maximum number of iterations allowed before stopping. Defaults to 99,999.
+        verbose (bool, optional): If True, prints progress details during execution. Defaults to False.
+
+    Returns:
+        Solution: The best solution found during the search.
+
+    Notes:
+        - The initial_solution must implement a `fitness()` and `get_neighbors()` method.
+        - The algorithm does not guarantee a global optimum; it only finds a local optimum.
+    """
+
+    # Run some validations to make sure initial solution is well implemented
+    run_validations(initial_solution)
+    fitness_history=[]
+
+    current = initial_solution
+    improved = True
+    iter = 1
+
+    while improved:
+        if verbose:
+            print(f'Current solution: {current} with fitness {current.fitness()}')
+
+        improved = False
+        neighbors = current.get_neighbors() # Solution must have a get_neighbors() method
+
+        for neighbor in neighbors:
+
+            if verbose:
+                print(f'Neighbor: {neighbor} with fitness {neighbor.fitness()}')
+
+            if maximization and (neighbor.fitness() >= current.fitness()):
+                current = deepcopy(neighbor)
+                improved = True
+            elif not maximization and (neighbor.fitness() <= current.fitness()):
+                current = deepcopy(neighbor)
+                improved = True
+        fitness_history.append(current.fitness())
+        iter += 1
+        if iter == max_iter:
+            break
+    
+    return current, fitness_history
+
+def run_validations(initial_solution):
+    if not isinstance(initial_solution, Solution):
+        raise TypeError("Initial solution must be an object of a class that inherits from Solution")
+    if not hasattr(initial_solution, "get_neighbors"):
+        print(f"The method 'get_neighbors' must be implemented in the initial solution.")
+    neighbors = initial_solution.get_neighbors()
+    if not isinstance(neighbors, list):
+        raise TypeError("get_neighbors method must return a list")
+    if not all([isinstance(neighbor, type(initial_solution)) for neighbor in neighbors]):
+        raise TypeError(f"Neighbors must be of the same type as solution object: {type(initial_solution)}")
+
+
+
+
+def simulated_annealing(
+    initial_solution: Solution,
+    C: float,
+    L: int,
+    H: float,
+    maximization: bool = True,
+    max_iter: int = 10,
+    verbose: bool = False,
+):
+    """Implementation of the Simulated Annealing optimization algorithm.
+
+    The algorithm iteratively explores the search space using a random neighbor of the
+    current solution. If a better neighbor is found, the current solution is replaced by
+    that neighbor. Otherwise, the solution may still be replaced by the neighbor with a certain
+    probability. This probability decreases throughout the execution. The process continues until
+    the maximum number of iterations is reached.  
+
+    The convergence speed of this algorithms depends on the initial value of control parameter C,
+    he speed at which C is decreased (H), and the number of iterations in which the same C is
+    maitained (L).
+
+
+    Params:
+        - initial_solution (SASolution): Initial solution to the optimization problem
+        - C (float): Probability control parameter
+        - L (int): Number of iterations with same C
+        - H (float): Decreasing rate of C
+        - maximization (bool): Is maximization problem?
+        - max_iter (int): Maximum number of iterations
+        - verbose (bool): If True, prints progress details during execution. Defaults to False.
+    """
+    # 1. Initialize solution
+    current_solution = initial_solution
+
+    iter = 1
+
+    if verbose:
+        print(f'Initial solution: {current_solution.repr} with fitness {current_solution.fitness()}')
+
+    fitness_history=[]
+    # 2. Repeat until termination condition
+    while iter <= max_iter:
+    
+        # 2.1 For L times
+        for _ in range(L):
+            # 2.1.1 Get random neighbor
+            random_neighbor = current_solution.get_random_neighbor()
+
+            neighbor_fitness = random_neighbor.fitness()
+            current_fitness = current_solution.fitness()
+
+            if verbose:
+                print(f"Random neighbor {random_neighbor} with fitness: {neighbor_fitness}")
+
+            # 2.1.2 Decide if neighbor is accepted as new solution
+            # If neighbor is better, accept it
+            if (
+                (maximization and (neighbor_fitness >= current_fitness))
+                or(not maximization and (neighbor_fitness <= current_fitness))
+            ):
+                current_solution = deepcopy(random_neighbor)
+                if verbose:
+                    print(f'Neighbor is better. Replaced current solution by neighbor.')
+
+            # If neighbor is worse, accept it with a certain probability
+            # Maximizaton: Neighbor is worse than current solution if fitness is lower
+            # Minimization: Neighbor is worse than current solution if fitness is higher
+            elif (
+                (maximization and (neighbor_fitness < current_fitness)
+                 or (not maximization and (neighbor_fitness > current_fitness)))
+            ):
+                # Generate random number between 0 and 1
+                random_float = random.random()
+                # Define probability P
+                p = np.exp(-abs(current_fitness - neighbor_fitness) / C)
+                if verbose:
+                    print(f'Probability of accepting worse neighbor: {p}')
+                # The event happens with probability P if the random number if lower than P
+                if random_float < p:
+                    current_solution = deepcopy(random_neighbor)
+                    if verbose:
+                        print(f'Neighbor is worse and was accepted.')
+                else:
+                    if verbose:
+                        print("Neighbor is worse and was not accepted.")
+
+            if verbose:
+                print(f"New current solution {current_solution} with fitness {current_solution.fitness()}")
+
+        fitness_history.append(current_solution.fitness())
+        # 2.2 Update C
+        C = C / H
+        if verbose:
+            print(f'Decreased C. New value: {C}')
+            print('--------------')
+
+        iter += 1
+
+    if verbose:
+        print(f'Best solution found: {current_solution.repr} with fitness {current_solution.fitness()}')
+    
+    # 3. Return solution
+    return current_solution, fitness_history

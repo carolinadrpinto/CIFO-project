@@ -25,6 +25,7 @@ def hill_climbing(initial_solution: Solution, maximization=False, max_iter=99999
 
     # Run some validations to make sure initial solution is well implemented
     run_validations(initial_solution)
+    fitness_history=[]
 
     current = initial_solution
     improved = True
@@ -48,12 +49,12 @@ def hill_climbing(initial_solution: Solution, maximization=False, max_iter=99999
             elif not maximization and (neighbor.fitness() <= current.fitness()):
                 current = deepcopy(neighbor)
                 improved = True
-        
+        fitness_history.append(current.fitness())
         iter += 1
         if iter == max_iter:
             break
     
-    return current
+    return current, fitness_history
 
 def run_validations(initial_solution):
     if not isinstance(initial_solution, Solution):

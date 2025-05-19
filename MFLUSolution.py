@@ -1,6 +1,7 @@
 import random
 from library.solution import Solution
 from itertools import combinations
+from copy import deepcopy
 from data.df_load import artists_list, conflicts_matrix
 
 class LUSolution(Solution):
@@ -85,6 +86,41 @@ class LUSolution(Solution):
     def fitness(self):
         fitness = (self.popularity_score()+self.diversity_score()+self.conflict_score()) / 3
         return fitness
+
+
+
+
+class LUSASolution(LUSolution):
+    def get_random_neighbor(self):
+        """Random neighbor is obtained by flatten the matrix and swap 2 consecutive artists"""
+        flatten_sol = [idx for row in self.repr for idx in row]
+
+        # Choose an artist idx to switch with the next artist in the flatten matrix
+        random_artist_idx = random.randint(0, len(self.artists)-2)
+
+        flatten_new_sol = deepcopy(flatten_sol)
+        flatten_new_sol[random_artist_idx] = flatten_sol[random_artist_idx+1]
+        flatten_new_sol[random_artist_idx+1] = flatten_sol[random_artist_idx]
+
+        # back to matrix
+        new_sol = [flatten_new_sol[i *  self.time_slots:(i + 1) * self.time_slots] for i in range(self.stages)]
+
+        return LUSASolution(repr=new_sol)
+    
+
+
+
+class LUHCSolution(LUSolution):
+    def get_neighbors(self):
+        """Neighbors are obtained by swaping the positions of two consecutive cities"""
+        neighbors = []
+        for i in range(1, len(self.repr)-1):
+            new_sol = deepcopy(self.repr)
+            new_sol[i], new_sol[i+1] = new_sol[i+1], new_sol[i]
+            neighbor = LUHCSolution(repr=new_sol)
+            neighbors.append(neighbor)
+        return neighbors
+
 
 
 
