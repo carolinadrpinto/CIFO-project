@@ -114,8 +114,97 @@ def partially_matched_crossover(parent1_repr: list[list[int]], parent2_repr: lis
 
 
 
-
 def swap_time_slots_crossover(parent1_repr: list[list[int]], parent2_repr: list[list[int]]):
+    """
+    Performs a column-based crossover between two parent solutions.
+
+    The function selects a random column and swaps that column between the two parents
+    to create two offspring. Then it ensures that each offspring maintains
+    valid permutations by replacing any duplicated values (introduced by the swap) with 
+    the corresponding values that were eliminated initally.
+
+    Args:
+    parent1_repr (list of lists): The first parent representation.
+    parent2_repr (list of lists): The second parent representation.
+        Both parents must have the same length and type.
+
+    Returns:
+        Two offspring representations resulting from the crossover.
+    """
+    def check_same_dimensions(matrix1, matrix2):
+        if len(matrix1) != len(matrix2):
+            return False  
+        for row1, row2 in zip(matrix1, matrix2):
+            if len(row1) != len(row2):
+                return False  
+        return True
+    
+    if not check_same_dimensions(parent1_repr, parent2_repr):
+        raise ValueError("Both parents must have the same dimensions.")
+
+    offspring1_repr = deepcopy(parent1_repr)
+    offspring2_repr = deepcopy(parent2_repr)
+    nlines, ncols = len(offspring1_repr), len(offspring1_repr[0])
+
+    # Choose a random column index to swap
+    col = random.randint(0, ncols - 1)
+    # Extract the column from each parent and store in a list
+    p1_col = []
+    p2_col = []
+    for line in range(nlines):
+        p1_col.append(parent1_repr[line][col])
+        p2_col.append(parent2_repr[line][col])
+
+    # Swap the selected column between the two offspring
+    for line in range(nlines):
+        offspring1_repr[line][col] = p2_col[line]
+        offspring2_repr[line][col] = p1_col[line]
+
+
+    def fix_global_duplicates(offspring,nlines,ncols,swapped_col_index):
+        total_vals = nlines * ncols
+        all_vals = set(range(total_vals))
+        flat = [val for row in offspring for val in row]
+        count=Counter(flat)
+        missing = list(all_vals - set(flat))
+
+        for i in range(nlines):
+            for j in range(ncols):
+                val = offspring[i][j]
+                if j == swapped_col_index:
+                    continue  # don't change the swapped column
+                if count[val] > 1:
+                    if not missing:
+                        raise ValueError("Not enough missing values to resolve duplicates")
+                    new_val = missing.pop(0)
+                    offspring[i][j] = new_val
+                    count[val] -= 1
+                    count[new_val] += 1
+
+        # flat = [val for row in offspring for val in row]
+        # aux_list=[]
+        # for i, value in enumerate(flat):
+        #     if value not in aux_list:
+        #         aux_list.append(value)
+        #     else:
+        #         print(f"value: {value}, index: {i}")
+        # print(flat)
+
+        return offspring
+
+
+        
+    offspring1_repr = fix_global_duplicates(offspring1_repr,nlines, ncols, col)
+    offspring2_repr = fix_global_duplicates(offspring2_repr,nlines, ncols, col)
+
+   
+    return offspring1_repr, offspring2_repr
+
+
+
+
+
+def swap_time_slots_crossover1(parent1_repr: list[list[int]], parent2_repr: list[list[int]]):
     """
     Performs a column-based crossover between two parent solutions.
 
@@ -191,7 +280,7 @@ def swap_time_slots_crossover(parent1_repr: list[list[int]], parent2_repr: list[
 
 
 # tentei dar fix mas ainda não está
-'''
+
 
 def swap_column_crossover(parent1_repr: list[list[int]], parent2_repr: list[list[int]]):
     """
@@ -258,6 +347,39 @@ def swap_column_crossover(parent1_repr: list[list[int]], parent2_repr: list[list
                         offspring2_repr[line][column] = val
                         used_p2.add(val)
                         break
+            #check global uniqueness
+    
+
+    all_vals=list(range(35))
+    flat1 = [val for row in offspring1_repr for val in row]
+    aux_list=[]
+    for i, value in enumerate(flat1):
+        if value not in aux_list:
+            aux_list.append(value)
+            print(f"value {value} in index {i} ok")
+        else:
+            print(f"value: {value}, index: {i}")
+    
+    print(flat1)
+    print(set(flat1))
+    print(all_vals)
+    # if set(flat1) != all_vals:
+    #     raise ValueError("Duplicates and missing values still exist1")
+    
+
+    flat2 = [val for row in offspring2_repr for val in row]
+    aux_list=[]
+    for i, value in enumerate(flat2):
+        if value not in aux_list:
+            aux_list.append(value)
+        else:
+            print(f"value: {value}, index: {i}")
+    
+    print(flat2)
+
+    # if set(flat2) != all_vals:
+    #     raise ValueError("Duplicates and missing values still exist2")
+
     
     print(f"col swap: {col}")
 
@@ -268,62 +390,93 @@ def swap_column_crossover(parent1_repr: list[list[int]], parent2_repr: list[list
     print(f" offspring2 in the end{offspring2_repr}")
 
     return offspring1_repr, offspring2_repr
-'''
 
 
 
 
 
 
-# def new_crossover(parent1_repr: list[list[int]], parent2_repr: list[list[int]]):
-#     """
-#     Performs a column-based crossover between two parent solutions.
 
-#     The function selects a random column and swaps that column between the two parents
-#     to create two offspring. Then it ensures that each offspring maintains
-#     valid permutations by replacing any duplicated values (introduced by the swap) with 
-#     the corresponding values that were eliminated initally.
+def new_crossover(parent1_repr: list[list[int]], parent2_repr: list[list[int]]):
+    """
+    Performs a column-based crossover between two parent solutions.
 
-#     Args:
-#     parent1_repr (list of lists): The first parent representation.
-#     parent2_repr (list of lists): The second parent representation.
-#         Both parents must have the same length and type.
+    The function selects a random column and swaps that column between the two parents
+    to create two offspring. Then it ensures that each offspring maintains
+    valid permutations by replacing any duplicated values (introduced by the swap) with 
+    the corresponding values that were eliminated initally.
 
-#     Returns:
-#         tuple: Two offspring representations resulting from the crossover.
-#     """
-#     offspring1_repr = deepcopy(parent1_repr)
-#     offspring2_repr = deepcopy(parent2_repr)
-#     nlines, ncols = len(offspring1_repr), len(offspring1_repr[0])
+    Args:
+    parent1_repr (list of lists): The first parent representation.
+    parent2_repr (list of lists): The second parent representation.
+        Both parents must have the same length and type.
 
-#     # Choose a random column index to swap
-#     col = random.randint(0, ncols - 1)
-#     # Extract the column from each parent and store in a list
-#     p1_col = []
-#     p2_col = []
-#     for line in range(nlines):
-#         p1_col.append(parent1_repr[line][col])
-#         p2_col.append(parent2_repr[line][col])
+    Returns:
+        tuple: Two offspring representations resulting from the crossover.
+    """
+    offspring1_repr = deepcopy(parent1_repr)
+    offspring2_repr = deepcopy(parent2_repr)
+    nlines, ncols = len(offspring1_repr), len(offspring1_repr[0])
 
-#     # Swap the selected column between the two offspring
-#     for line in range(nlines):
-#         offspring1_repr[line][col] = p2_col[line]
-#         offspring2_repr[line][col] = p1_col[line]
+    # Choose a random column index to swap
+    col = random.randint(0, ncols - 1)
+    # Extract the column from each parent and store in a list
+    p1_col = []
+    p2_col = []
+    for line in range(nlines):
+        p1_col.append(parent1_repr[line][col])
+        p2_col.append(parent2_repr[line][col])
 
-#     # Resolve duplicates introduced by the swap
-#     while len(p1_col) != 0:
-#         n1 = p1_col[0]
-#         n2 = p2_col[0]
-#         for line in range(nlines):
-#             for column in range(ncols):
-#                 if column == col:
-#                     continue
-#                 else:
-#                     if offspring1_repr[line][column] == n2:
-#                         offspring1_repr[line][column] = p1_col[0]
-#                     if offspring2_repr[line][column] == n1:
-#                         offspring2_repr[line][column] = p2_col[0]
-#         p1_col = p1_col[1:]
-#         p2_col = p2_col[1:]
+    # Swap the selected column between the two offspring
+    for line in range(nlines):
+        offspring1_repr[line][col] = p2_col[line]
+        offspring2_repr[line][col] = p1_col[line]
 
-#     return offspring1_repr, offspring2_repr
+    # Resolve duplicates introduced by the swap
+    while len(p1_col) != 0:
+        n1 = p1_col[0]
+        n2 = p2_col[0]
+        for line in range(nlines):
+            for column in range(ncols):
+                if column == col:
+                    continue
+                else:
+                    if offspring1_repr[line][column] == n2:
+                        offspring1_repr[line][column] = p1_col[0]
+                    if offspring2_repr[line][column] == n1:
+                        offspring2_repr[line][column] = p2_col[0]
+        p1_col = p1_col[1:]
+        p2_col = p2_col[1:]
+
+
+    all_vals=list(range(35))
+    flat1 = [val for row in offspring1_repr for val in row]
+    aux_list=[]
+    for i, value in enumerate(flat1):
+        if value not in aux_list:
+            aux_list.append(value)
+            print(f"value {value} in index {i} ok")
+        else:
+            print(f"value: {value}, index: {i}")
+    
+    print(flat1)
+    print(set(flat1))
+    print(all_vals)
+    # if set(flat1) != all_vals:
+    #     raise ValueError("Duplicates and missing values still exist1")
+    
+
+    flat2 = [val for row in offspring2_repr for val in row]
+    aux_list=[]
+    for i, value in enumerate(flat2):
+        if value not in aux_list:
+            aux_list.append(value)
+        else:
+            print(f"value: {value}, index: {i}")
+    
+    print(flat2)
+    
+
+
+
+    return offspring1_repr, offspring2_repr
