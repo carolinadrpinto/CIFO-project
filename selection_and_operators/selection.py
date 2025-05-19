@@ -17,7 +17,6 @@ def ranking_selection(population: list[Solution], maximization: bool, s=1.5):
         # Minimization
         ranking = sorted(zip(population, fitness_values), key=lambda x: x[1], reverse=False)
 
-
     population_size = len(ranking)
     #it can be tuned s
     ranks_array = np.arange(population_size)
