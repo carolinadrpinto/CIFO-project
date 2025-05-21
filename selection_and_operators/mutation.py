@@ -94,3 +94,28 @@ def shuffle_mutation(representation: list[list[int]], mut_prob=0.3, max_window_s
 
 
     return new_representation
+
+
+
+
+
+def mutation_KA(representation: list[list[int]], mut_prob=0.3, max_window_size=None):
+
+    new_representation = deepcopy(representation)
+
+    if random.random() <= mut_prob:
+        new_representation_converted = [row.index(1) for row in new_representation]
+        
+        shift_options = [-2, -1, 1, 2]
+        shift = random.choice(shift_options)
+    
+        n = len(new_representation_converted)
+        
+        representation_with_shift = [new_representation_converted[(i - shift) % n] for i in range(n)]
+        print(f"Shift amount chosen: {shift}")
+
+        for i, pos in enumerate(representation_with_shift):
+            new_representation[i] = [0] * len(new_representation[i])
+            new_representation[i][pos] = 1
+
+    return new_representation
