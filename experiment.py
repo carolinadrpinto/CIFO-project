@@ -47,6 +47,7 @@ VERBOSE = False,
     best_solutions = []
     fitness_histories = []
     elapsed_time_list=[]
+    df = pd.DataFrame(columns=range(MAX_GEN)) # Shape will be 30 x 200
 
 
     for i in range(NUMBER_OF_TESTS):
@@ -69,6 +70,9 @@ VERBOSE = False,
 
         best_solutions.append(best_solution)
         fitness_histories.append(fitness_history)
+        df.loc[i] = fitness_history
+
+
         end_time = time.time()
         elapsed_time = end_time - start_time
         elapsed_time_list.append(elapsed_time)
@@ -79,47 +83,58 @@ VERBOSE = False,
     fitness_avg = np.mean(fitness_array, axis=0)
     fitness_median = np.median(fitness_array, axis=0)
     fitness_std = np.std(fitness_array, axis=0)
+    
+    
+    df.to_csv(f"{folder_path}/{EXPERIMENT_NAME}_df.csv", index=False)
 
-
-
-    stats_df = pd.DataFrame({
-        "Experiment_Name": EXPERIMENT_NAME,
-        "Generation": np.arange(MAX_GEN),
-        "Fitness_Mean": fitness_avg,
-        "Fitness_Median": fitness_median,
-        "Fitness_Std": fitness_std
-    })
-
-    final_fitness = fitness_array[:, -1]  # final generation
-    final_fitness_df = pd.DataFrame({
-        "Experiment_name": EXPERIMENT_NAME,
-        "Final_Fitness": final_fitness})
-
-    csv_path= "results/all_final_fitness.csv"
-    if os.path.exists(csv_path):
-        final_fitness_df.to_csv(csv_path, mode='a', header=False, index=False)
-    else:
-        final_fitness_df.to_csv(csv_path, index=False)
-
-    csv_path = "results/all_experiments.csv"
-    if os.path.exists(csv_path):
-        stats_df.to_csv(csv_path, mode='a', header=False, index=False)
-    else:
-        stats_df.to_csv(csv_path, index=False)
-
-    stats_df.to_csv(f"{folder_path}/{EXPERIMENT_NAME}.csv", index=False)
-
-    best_final_fitnesses = [run[-1] for run in fitness_histories]
-
+    
     return {
-    "name": EXPERIMENT_NAME,
-    "fitness_array": fitness_array,
-    "fitness_avg": fitness_avg,
-    "fitness_median": fitness_median,
-    "fitness_std": fitness_std,
-    "stats_df": stats_df,
-    "elapsed_time_avg": elapsed_time_avg
-}
+        "name": EXPERIMENT_NAME,
+        "df": df, 
+        "avg_elapsed_time": elapsed_time_avg}
+
+
+    # Save configuration results in the dictionary
+    #fitness_dfs[config_label] = df
+
+#     stats_df = pd.DataFrame({
+#         "Experiment_Name": EXPERIMENT_NAME,
+#         "Generation": np.arange(MAX_GEN),
+#         "Fitness_Mean": fitness_avg,
+#         "Fitness_Median": fitness_median,
+#         "Fitness_Std": fitness_std
+#     })
+
+#     final_fitness = fitness_array[:, -1]  # final generation
+#     final_fitness_df = pd.DataFrame({
+#         "Experiment_name": EXPERIMENT_NAME,
+#         "Final_Fitness": final_fitness})
+
+#     csv_path= "results/all_final_fitness.csv"
+#     if os.path.exists(csv_path):
+#         final_fitness_df.to_csv(csv_path, mode='a', header=False, index=False)
+#     else:
+#         final_fitness_df.to_csv(csv_path, index=False)
+
+#     csv_path = "results/all_experiments.csv"
+#     if os.path.exists(csv_path):
+#         stats_df.to_csv(csv_path, mode='a', header=False, index=False)
+#     else:
+#         stats_df.to_csv(csv_path, index=False)
+
+#     stats_df.to_csv(f"{folder_path}/{EXPERIMENT_NAME}.csv", index=False)
+
+#     best_final_fitnesses = [run[-1] for run in fitness_histories]
+
+#     return {
+#     "name": EXPERIMENT_NAME,
+#     "fitness_array": fitness_array,
+#     "fitness_avg": fitness_avg,
+#     "fitness_median": fitness_median,
+#     "fitness_std": fitness_std,
+#     "stats_df": stats_df,
+#     "elapsed_time_avg": elapsed_time_avg
+# }
 
 
 
