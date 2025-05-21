@@ -152,7 +152,6 @@ VERBOSE = False,
 
     initial_sol = LUHCSolution()
 
-
     best_solutions = []
     fitness_histories = []
     elapsed_time_list=[]
