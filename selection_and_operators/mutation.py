@@ -68,7 +68,7 @@ def shuffle_mutation(representation: list[list[int]], mut_prob=0.3, max_window_s
         while(stage1==stage2):
             stage2=random.randint(0, len(representation)-1)
 
-        idx_1=random.randint(0, len(representation)-1)
+        idx_1=random.randint(0, len(representation[0])-1)
         idx_2=idx_1
 
         # 
