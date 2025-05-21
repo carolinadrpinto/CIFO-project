@@ -52,7 +52,7 @@ VERBOSE = False,
     for i in range(NUMBER_OF_TESTS):
         start_time = time.time()
 
-        print(f'Iteration {i} of the genetic algorithm\n')
+        print(f'\nIteration {i} of the genetic algorithm\n')
         
         best_solution, fitness_history = genetic_algorithm(
             initial_population=initial_population,
@@ -80,15 +80,34 @@ VERBOSE = False,
     fitness_median = np.median(fitness_array, axis=0)
     fitness_std = np.std(fitness_array, axis=0)
 
+
+
     stats_df = pd.DataFrame({
+        "Experiment_Name": EXPERIMENT_NAME,
         "Generation": np.arange(MAX_GEN),
         "Fitness_Mean": fitness_avg,
         "Fitness_Median": fitness_median,
         "Fitness_Std": fitness_std
     })
 
-    stats_df.to_csv(f"{folder_path}/{EXPERIMENT_NAME}.csv", index=False)
+    final_fitness = fitness_array[:, -1]  # final generation
+    final_fitness_df = pd.DataFrame({
+        "Experiment_name": EXPERIMENT_NAME,
+        "Final_Fitness": final_fitness})
 
+    csv_path= "results/all_final_fitness.csv"
+    if os.path.exists(csv_path):
+        final_fitness_df.to_csv(csv_path, mode='a', header=False, index=False)
+    else:
+        final_fitness_df.to_csv(csv_path, index=False)
+
+    csv_path = "results/all_experiments.csv"
+    if os.path.exists(csv_path):
+        stats_df.to_csv(csv_path, mode='a', header=False, index=False)
+    else:
+        stats_df.to_csv(csv_path, index=False)
+
+    stats_df.to_csv(f"{folder_path}/{EXPERIMENT_NAME}.csv", index=False)
 
     best_final_fitnesses = [run[-1] for run in fitness_histories]
 
@@ -127,9 +146,9 @@ VERBOSE = False,
     for i in range(NUMBER_OF_TESTS):
         start_time = time.time()
 
-        print(f'Iteration {i} of the HC algorithm\n')
+        print(f'\nIteration {i} of the HC algorithm\n')
         
-        best_solution, fitness_history = hill_climbing(
+        best_solution, fitness_history= hill_climbing(
             initial_solution=initial_sol,
             maximization=MAXIMIZATION,
             max_iter=MAX_GEN,
@@ -149,14 +168,17 @@ VERBOSE = False,
     fitness_median = np.median(fitness_array, axis=0)
     fitness_std = np.std(fitness_array, axis=0)
 
-    stats_df = pd.DataFrame({
-        "Generation": np.arange(MAX_GEN),
-        "Fitness_Mean": fitness_avg,
-        "Fitness_Median": fitness_median,
-        "Fitness_Std": fitness_std
-    })
+    # stats_df = pd.DataFrame({
+    #     "Generation": np.arange(MAX_GEN),
+    #     "Fitness_Mean": fitness_avg,
+    #     "Fitness_Median": fitness_median,
+    #     "Fitness_Std": fitness_std
+    # })
 
-    stats_df.to_csv(f"{folder_path}/{EXPERIMENT_NAME}.csv", index=False)
+    # stats_df.to_csv(f"{folder_path}/{EXPERIMENT_NAME}.csv", index=False)
+    final_fitness = fitness_array[:, -1]  # final generation
+    final_fitness_df = pd.DataFrame({"Final_Fitness": final_fitness})
+    final_fitness_df.to_csv(f"{folder_path}/{EXPERIMENT_NAME}_final_generation_fitness.csv", index=False)
 
 
     best_final_fitnesses = [run[-1] for run in fitness_histories]
@@ -167,10 +189,9 @@ VERBOSE = False,
     "fitness_avg": fitness_avg,
     "fitness_median": fitness_median,
     "fitness_std": fitness_std,
-    "stats_df": stats_df,
+    #"stats_df": stats_df,
     "elapsed_time_avg": elapsed_time_avg
 }
-
 
 
 
@@ -199,7 +220,7 @@ VERBOSE = False,
     for i in range(NUMBER_OF_TESTS):
         start_time = time.time()
 
-        print(f'Iteration {i} of the SA algorithm\n')
+        print(f'\nIteration {i} of the SA algorithm\n')
         
         best_solution, fitness_history = simulated_annealing(
             initial_solution=initial_sol,
@@ -225,14 +246,31 @@ VERBOSE = False,
     fitness_std = np.std(fitness_array, axis=0)
 
     stats_df = pd.DataFrame({
+        'Experiment_name': EXPERIMENT_NAME,
         "Generation": np.arange(MAX_GEN),
         "Fitness_Mean": fitness_avg,
         "Fitness_Median": fitness_median,
         "Fitness_Std": fitness_std
     })
 
-    stats_df.to_csv(f"{folder_path}/{EXPERIMENT_NAME}.csv", index=False)
+    final_fitness = fitness_array[:, -1]  # final generation
+    final_fitness_df = pd.DataFrame({
+        "Experiment_name": EXPERIMENT_NAME,
+        "Final_Fitness": final_fitness})
 
+    csv_path= "results/all_final_fitness"
+    if os.path.exists(csv_path):
+        final_fitness_df.to_csv(csv_path, mode='a', header=False, index=False)
+    else:
+        final_fitness_df.to_csv(csv_path, index=False)
+
+    csv_path = "results/all_experiments.csv"
+    if os.path.exists(csv_path):
+        stats_df.to_csv(csv_path, mode='a', header=False, index=False)
+    else:
+        stats_df.to_csv(csv_path, index=False)
+
+    stats_df.to_csv(f"{folder_path}/{EXPERIMENT_NAME}.csv", index=False)
 
     best_final_fitnesses = [run[-1] for run in fitness_histories]
 
@@ -262,17 +300,17 @@ plt.rcParams['axes.prop_cycle'] = plt.cycler(color=colors)
 
 def plot_avg_median_fit_per_generation(all_results):
 
-    # plt.style.use("seaborn-colorblind")
-    # colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
     generation_order = sorted(all_results[0]['stats_df']['Generation'].unique())
+    tick_step = 20  # Show every 20 generations
+    tick_positions = range(0, len(generation_order), tick_step)
+    tick_labels = [generation_order[i] for i in tick_positions]
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6), sharey=True)
 
     # Plot average fitness
     for i, result in enumerate(all_results):
         label = f"{i+1}: {result['name']}"
-        ax1.plot(result["stats_df"]["Generation"], result["fitness_avg"], label=label, color=colors[i % len(colors)], linewidth=2)
-        #ax1.scatter(generation_order, result["fitness_avg"], s=20, zorder=5, color=colors[i % len(colors)])
+        ax1.plot(result["stats_df"]["Generation"], result["fitness_avg"], label=label, color=colors[i % len(colors)], linewidth=1.2)
 
     ax1.set_title("Average Fitness per Generation", fontsize=13, weight='bold')
     ax1.set_xlabel("Generation")
@@ -280,17 +318,20 @@ def plot_avg_median_fit_per_generation(all_results):
     ax1.grid(True, linestyle='--', alpha=0.5)
     ax1.set_xticks(range(len(generation_order)))
     ax1.set_xticklabels(generation_order)
+    ax1.set_xticks(tick_positions)
+    ax1.set_xticklabels(tick_labels)
 
     # Plot median fitness
     for i, result in enumerate(all_results):
-        ax2.plot(result["stats_df"]["Generation"], result["fitness_median"], label=f"{i+1}: {result['name']}", color=colors[i % len(colors)], linewidth=2)
-        #ax2.scatter(generation_order, result["fitness_median"], s=20, zorder=5, color=colors[i % len(colors)])
+        ax2.plot(result["stats_df"]["Generation"], result["fitness_median"], label=f"{i+1}: {result['name']}", color=colors[i % len(colors)], linewidth=1.2)
 
     ax2.set_title("Median Fitness per Generation", fontsize=13, weight='bold')
     ax2.set_xlabel("Generation")
     ax2.grid(True, linestyle='--', alpha=0.5)
     ax2.set_xticks(range(len(generation_order)))
     ax2.set_xticklabels(generation_order)
+    ax2.set_xticks(tick_positions)
+    ax2.set_xticklabels(tick_labels)
 
     handles, labels = ax1.get_legend_handles_labels()
     fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.15), ncol=2, fontsize=9, frameon=False)
@@ -308,12 +349,6 @@ def boxplots_final_fitness(all_results):
         operator_names.append(result['name'])
 
     final_fitness_by_experiment = [arr[:, -1] for arr in fitness_arrays]
-
-    # prop_cycle = plt.rcParams['axes.prop_cycle']
-    # colors = prop_cycle.by_key()['color']
-
-    # plt.style.use("seaborn-whitegrid")
-    # plt.rcParams['axes.prop_cycle'] = plt.cycler(color=colors)
 
     plt.figure(figsize=(10, 6))
 
@@ -355,8 +390,6 @@ def plot_mean_std_error(all_results):
 
     # Plot
     x_pos = list(range(1, len(operator_names) + 1))
-    # prop_cycle = plt.rcParams['axes.prop_cycle']
-    # colors = prop_cycle.by_key()['color']
     plt.figure(figsize=(10, 6))
     for i, (x, mean, std, color) in enumerate(zip(x_pos, final_means, final_stds, colors)):
         plt.errorbar(x, mean, yerr=std, fmt='o', capsize=5, markersize=6, linestyle='None', color=color, linewidth=2)
@@ -380,3 +413,4 @@ def avg_elapsed_time_table(all_results):
         })
     avg_elapsed_time = pd.DataFrame(data)
     avg_elapsed_time.index = range(1, len(all_results)+1)
+    return avg_elapsed_time
