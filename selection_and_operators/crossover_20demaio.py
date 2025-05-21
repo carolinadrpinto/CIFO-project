@@ -206,6 +206,56 @@ def swap_time_slots_crossover(parent1_repr: list[list[int]], parent2_repr: list[
 
 
 
+def crossover_KAP(parent1_repr: list[list[int]], parent2_repr: list[list[int]]):
+
+    rows = len(parent1_repr)
+    cols = len(parent1_repr[0])
+
+    parent1_converted = [row.index(1) for row in parent1_repr]
+    parent2_converted = [row.index(1) for row in parent2_repr]
+
+    def slots_artists(parent_converted,cols):
+        slot_artists = {i: [] for i in range(cols)}
+        for artist_index, slot in enumerate(parent_converted):
+            slot_artists[slot].append(artist_index)
+        return slot_artists
+    
+    parent1_correspondence=slots_artists(parent1_converted,cols)
+    parent2_correspondence=slots_artists(parent2_converted,cols)
+
+    random_slot = random.randint(0, cols - 1)
+
+    parent1_artists = parent1_correspondence[random_slot]
+    parent2_artists = parent2_correspondence[random_slot]
+
+    offspring1_repr = deepcopy(parent1_converted)
+    offspring2_repr = deepcopy(parent2_converted)
+
+
+    for artist in parent2_artists:
+        offspring1_repr[artist] = random_slot
+
+    
+    for artist in parent1_artists:
+        offspring2_repr[artist] = random_slot
+
+    # Cross-mapping 
+    for a1, a2 in zip(parent1_artists, parent2_artists):
+        offspring2_repr[a2] = parent2_converted[a1]
+        offspring1_repr[a1] = parent1_converted[a2]
+
+
+    def return_to_binary(index, length):
+        row = [0] * length
+        row[index] = 1
+        return row
+
+    offspring1_repr = [return_to_binary(idx, cols) for idx in offspring1_repr]
+    offspring2_repr = [return_to_binary(idx, cols) for idx in offspring2_repr]
+        
+
+    return offspring1_repr, offspring2_repr  
+
 
 
 
