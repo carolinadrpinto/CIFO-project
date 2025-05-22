@@ -36,15 +36,14 @@ def ranking_selection(population: list[Solution], maximization: bool, s=1.5):
         
 
 def tournament_selection(population: list[Solution], maximization: bool, k=2): #30 to 40 % moderated pressure
-    population_size = len(population)
-
-    for _ in range(population_size):
+    
         tournament_participants = np.random.choice(population, size=k, replace=False)        
         if maximization:
             best = max(tournament_participants, key=lambda ind: ind.fitness())
         else:
             best = min(tournament_participants, key=lambda ind: ind.fitness())
-    return deepcopy(best)
+            
+        return deepcopy(best)
         
 
 def fitness_proportionate_selection(population: list[Solution], maximization: bool):
