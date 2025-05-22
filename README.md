@@ -7,7 +7,7 @@ This repository contains the materials for our project in the CIFO course, part 
 ## Project Structure
 
 ```text
-CIFO2025/
+CIFO-project/
 ├── data/
 │   ├── artists(in).csv                          # Artists dataset: Name, Genre and Popularity Score
 │   ├── conflicts(in).csv                        # Conflict matrix (35x35) of conflict scores between each pair of artists
