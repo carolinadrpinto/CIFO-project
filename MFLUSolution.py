@@ -195,6 +195,69 @@ class LUKAPSolution(Solution):
     def fitness(self):
         fitness = (self.popularity_score()+self.diversity_score()+self.conflict_score()) / 3
         return fitness
+    
+
+
+class LUKAPGASolution(LUKAPSolution):
+    def __init__(
+        self,
+        crossover_function,
+        mutation_function,
+        artists: list[tuple[int]]=artists_list,
+        conflicts: list[list[float]] = conflicts_matrix,
+        time_slots: int = 7,
+        stages: int = 5,
+        repr = None,
+    ):
+
+        super().__init__(
+            artists=artists,
+            conflicts=conflicts,
+            time_slots=time_slots,
+            stages=stages,
+            repr=repr,
+            )
+        
+        self.mutation_function=mutation_function
+        self.crossover_function=crossover_function
+
+
+    def mutation(self, mut_prob=0.3, max_window_size=10):
+
+            new_repr = self.mutation_function(self.repr, mut_prob, max_window_size)
+
+            return LUKAPGASolution(
+                mutation_function=self.mutation_function,
+                crossover_function=self.crossover_function,
+                artists=self.artists,
+                conflicts=self.conflicts,
+                time_slots=self.time_slots,
+                stages=self.stages,
+                repr=new_repr
+            )
+
+    def crossover(self, other_solution):
+        offspring1_repr, offspring2_repr = self.crossover_function(self.repr, other_solution.repr)
+        return(
+            LUKAPGASolution(
+            mutation_function=self.mutation_function,
+            crossover_function=self.crossover_function,
+            artists=self.artists,
+            conflicts=self.conflicts,
+            time_slots=self.time_slots,
+            stages=self.stages,
+            repr=offspring1_repr,
+        ),
+        LUKAPGASolution(
+            mutation_function=self.mutation_function,
+            crossover_function=self.crossover_function,
+            artists=self.artists,
+            conflicts=self.conflicts,
+            time_slots=self.time_slots,
+            stages=self.stages,
+            repr=offspring2_repr,
+        )
+        )
 
 
 class LUSASolution(LUSolution):
@@ -307,6 +370,14 @@ class LUGASolution(LUSolution):
             repr=offspring2_repr,
         )
         )
+
+
+
+
+
+
+
+
 
 
 
