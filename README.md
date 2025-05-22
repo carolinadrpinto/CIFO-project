@@ -9,21 +9,21 @@ This repository contains the materials for our project in the CIFO course, part 
 ```text
 CIFO2025/
 ├── data/
-│   ├── artists(in).csv        # Artists dataset: Name, Genre and Popularity Score
-│   ├── conflicts(in).csv      # Conflict matrix (35x35) of conflict scores between each pair of artists
-│   └── df_load.py             # script to load the data
-├── library/                   # Core GA implementation modules
-│   ├── algorithms.py          # Script with HC, SA and GA functions
-│   ├── solution.py            # Solution Class Script from the classes
+│   ├── artists(in).csv                          # Artists dataset: Name, Genre and Popularity Score
+│   ├── conflicts(in).csv                        # Conflict matrix (35x35) of conflict scores between each pair of artists
+│   └── df_load.py                               # script to load the data
+├── library/                                     # Core GA implementation modules
+│   ├── algorithms.py                            # Script with HC, SA and GA functions
+│   ├── solution.py                              # Solution Class Script from the classes
 │   └── selection_and_operators/
-│       ├── crossover.py           # 4 crossover functions
-│       ├── mutation.py            # 4 mutation functions
-│       └── selection.py           # selection functions
-├── EDA.ipynbn             # notebook with the EDA
-├── MFLUSolution.py        # Our Music Festival Line Up Class
-├── experiment.py          # experiment functions
-├── results.ipynb          # notebook to run the experiments of the algorithms
-├── CIFO_2024_2025_Project_Statement.pdf  # Project requirements & guidelines
+│       ├── crossover.py                         # 4 crossover functions
+│       ├── mutation.py                          # 4 mutation functions
+│       └── selection.py                         # Selection functions
+├── EDA.ipynbn                                   # Notebook with the EDA
+├── MFLUSolution.py                              # Our Music Festival Line Up Class
+├── experiment.py                                # Experiment functions
+├── results.ipynb                                # Notebook to run the experiments of the algorithms
+├── CIFO_2024_2025_Project_Statement.pdf         # Project requirements & guidelines
 └── README.md
 ```
 
