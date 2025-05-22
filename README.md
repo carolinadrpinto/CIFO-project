@@ -1,4 +1,4 @@
-# CIFO-project
+# CIFO - Project
 Computational Intelligence for Optimization Project
 
 ## Project Overview
