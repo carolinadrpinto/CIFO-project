@@ -72,11 +72,11 @@ def partially_matched_crossover(parent1_repr: list[list[int]], parent2_repr: lis
     idx1 = random.randint(0, size - 1)
     idx2 = idx1
 
-    while abs(idx1-idx2)==0:
-        idx2=random.randint(0, size - 1)
-
     if idx1 > idx2:
         idx1, idx2 = idx2, idx1
+
+    while abs(idx1-idx2)==0 or abs(idx1-idx2)>int(size/2):
+        idx2=random.randint(0, size - 1)
     
     # Initialize offspring representations
     offspring1_repr = [None] * size
