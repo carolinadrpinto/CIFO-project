@@ -11,7 +11,7 @@ CIFO-project/
 ├── data/
 │   ├── artists(in).csv                          # Artists dataset: Name, Genre and Popularity Score
 │   ├── conflicts(in).csv                        # Conflict matrix (35x35) of conflict scores between each pair of artists
-│   └── df_load.py                               # script to load the data
+│   └── df_load.py                               # Script to load the data
 ├── library/                                     # Core GA implementation modules
 │   ├── algorithms.py                            # Script with HC, SA and GA functions
 │   ├── solution.py                              # Solution Class Script from the classes
