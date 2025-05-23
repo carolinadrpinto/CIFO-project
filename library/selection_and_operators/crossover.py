@@ -25,7 +25,7 @@ def cycle_crossover(parent1_repr: list[list[int]], parent2_repr: list[list[int]]
         # Find where this value is in parent1 to get the next index in the cycle
         next_cycle_idx = parent1_flat.index(value_parent2)
 
-        # Closed the cycle -> Break
+        # Close the cycle- Break
         if next_cycle_idx == initial_random_idx:
             break
 
@@ -168,9 +168,10 @@ def swap_time_slots_crossover(parent1_repr: list[list[int]], parent2_repr: list[
             p1_col_copy.remove(value)
 
 
-    parent1_duplicate_missing=dict(zip(p2_col_copy, p1_col_copy))
+    parent1_duplicate_missing=dict(zip(p2_col_copy, p1_col_copy)) #dictionary that makes a correspondence between the two swapped columns for fixing duplicates
     parent2_duplicate_missing=dict(zip(p1_col_copy, p2_col_copy))
 
+    #function to fix the global duplicates 
     def fix_global_duplicates(offspring,parent_duplicate_missing,nlines,ncols,swapped_col_index):
         total_vals = nlines * ncols
         all_vals = set(range(total_vals))
@@ -181,7 +182,7 @@ def swap_time_slots_crossover(parent1_repr: list[list[int]], parent2_repr: list[
                 if j == swapped_col_index:
                     continue  # don't change the swapped column
                 if val in parent_duplicate_missing:
-                    offspring[i][j] = parent_duplicate_missing[val]
+                    offspring[i][j] = parent_duplicate_missing[val] #change the duplicated values outside the swapped column
                 
 
         flat = [val for row in offspring for val in row]
@@ -191,7 +192,7 @@ def swap_time_slots_crossover(parent1_repr: list[list[int]], parent2_repr: list[
         return offspring
 
         
-    offspring1_repr = fix_global_duplicates(offspring1_repr,parent1_duplicate_missing,nlines, ncols, col)
+    offspring1_repr = fix_global_duplicates(offspring1_repr,parent1_duplicate_missing,nlines, ncols, col) #final representations
     offspring2_repr = fix_global_duplicates(offspring2_repr,parent2_duplicate_missing,nlines, ncols, col)
 
    
@@ -204,7 +205,7 @@ def crossover_KAP(parent1_repr: list[list[int]], parent2_repr: list[list[int]]):
     rows = len(parent1_repr)
     cols = len(parent1_repr[0])
 
-    parent1_converted = [row.index(1) for row in parent1_repr]
+    parent1_converted = [row.index(1) for row in parent1_repr] #convert to list where artists represent indexes and the values represent their time slot
     parent2_converted = [row.index(1) for row in parent2_repr]
 
     def slots_artists(parent_converted,cols):
@@ -213,31 +214,32 @@ def crossover_KAP(parent1_repr: list[list[int]], parent2_repr: list[list[int]]):
             slot_artists[slot].append(artist_index)
         return slot_artists
     
-    parent1_correspondence=slots_artists(parent1_converted,cols)
+    parent1_correspondence=slots_artists(parent1_converted,cols) #group the artists assigned to each time slot for easier manipulation
     parent2_correspondence=slots_artists(parent2_converted,cols)
 
-    random_slot = random.randint(0, cols - 1)
+    random_slot = random.randint(0, cols - 1) #select random slot
 
-    parent1_artists = parent1_correspondence[random_slot]
+    parent1_artists = parent1_correspondence[random_slot] #get the artists that are in the random slot
     parent2_artists = parent2_correspondence[random_slot]
 
     offspring1_repr = deepcopy(parent1_converted)
     offspring2_repr = deepcopy(parent2_converted)
 
 
+    #swaps the columns (random slot) between parents
     for artist in parent2_artists:
-        offspring1_repr[artist] = random_slot
+        offspring1_repr[artist] = random_slot 
 
     
     for artist in parent1_artists:
         offspring2_repr[artist] = random_slot
 
-    # Cross-mapping 
+    # Cross-mapping to fix the duplicates
     for a1, a2 in zip(parent1_artists, parent2_artists):
         offspring2_repr[a2] = parent2_converted[a1]
         offspring1_repr[a1] = parent1_converted[a2]
 
-
+    #back to matrix
     def return_to_binary(index, length):
         row = [0] * length
         row[index] = 1
