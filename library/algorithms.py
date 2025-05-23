@@ -4,6 +4,9 @@ import numpy as np
 from library.solution import Solution
 from typing import Callable
 
+# this algorithms and functions are based in the ones provided in class with minimal changes
+# to accomodate our work/problem/analysis
+
 def get_best_ind(population: list[Solution], maximization: bool):
     fitness_list = [ind.fitness() for ind in population]
     if maximization:

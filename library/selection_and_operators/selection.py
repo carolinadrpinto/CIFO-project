@@ -6,8 +6,6 @@ from copy import deepcopy
 from library.solution import Solution
 
 
-#Solution has to return me a matrix and has to have a method fitness
-
 def ranking_selection(population: list[Solution], maximization: bool, s=1.5):
     fitness_values= [ind.fitness() for ind in population]
 
@@ -48,7 +46,6 @@ def tournament_selection(population: list[Solution], maximization: bool, k=2): #
         
 
 def fitness_proportionate_selection(population: list[Solution], maximization: bool):
-    # total_fitness = sum([ind.fitness() for ind in population])
 
     if maximization:
         fitness_values = [ind.fitness() for ind in population]
@@ -59,7 +56,7 @@ def fitness_proportionate_selection(population: list[Solution], maximization: bo
 
     total_fitness = sum(fitness_values)
 
-    # Generate random number between 0 and total
+    # Generate random number between 0 and total fitness
     random_nr = random.uniform(0, total_fitness)
     box_boundary = 0
     # For each individual, check if random number is inside the individual's "box"

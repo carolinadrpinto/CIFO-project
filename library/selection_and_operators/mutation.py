@@ -70,12 +70,11 @@ def shuffle_mutation(representation: list[list[int]], mut_prob=0.3, max_window_s
 
         idx_1=random.randint(0, len(representation[0])-1)
         idx_2=idx_1
-
         # 
-        # to guarantee that the indexes are different and do not have a distance greater than 10 
+        # to guarantee that the indexes are different and do not have a distance greater window size
         while((abs(idx_1-idx_2)==0)):
             new_rand_int=random.randint(2, max_window_size)
-            if (idx_1+new_rand_int<=34):
+            if (idx_1+new_rand_int<=6):
                 idx_2=idx_1+new_rand_int
             else:
                 idx_2=idx_1-new_rand_int
@@ -94,8 +93,6 @@ def shuffle_mutation(representation: list[list[int]], mut_prob=0.3, max_window_s
 
 
     return new_representation
-
-
 
 
 
