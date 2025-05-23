@@ -23,7 +23,7 @@ def swap_stages_slots_mutation(representation: list[list[int]], mut_prob=0.3, ma
 
 
 
-def inversion_mutation(representation: list[list[int]], mut_prob=0.3, max_window_size=10):
+def inversion_mutation(representation: list[list[int]], mut_prob=0.3, max_window_size=5):
 
     new_representation = deepcopy(representation)
     if random.random() <= mut_prob:
@@ -57,7 +57,7 @@ def inversion_mutation(representation: list[list[int]], mut_prob=0.3, max_window
 
 
 
-def shuffle_mutation(representation: list[list[int]], mut_prob=0.3, max_window_size=5):
+def shuffle_mutation(representation: list[list[int]], mut_prob=0.3, max_window_size=3):
     new_representation = deepcopy(representation)
 
     if random.random() <= mut_prob:

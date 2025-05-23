@@ -23,7 +23,6 @@ def genetic_algorithm(
     maximization: bool = False,
     xo_prob: float = 0.9,
     mut_prob: float = 0.2,
-    mut_max_window_size=5,
     elitism: bool = True,
     verbose: bool = False,
 ):
@@ -93,7 +92,7 @@ def genetic_algorithm(
                 print(f'Offspring:\n{offspring1}\n{offspring2}')
             
             # 2.3.4. Apply mutation to the offspring
-            first_new_ind = offspring1.mutation(mut_prob, mut_max_window_size)
+            first_new_ind = offspring1.mutation(mut_prob)
             # 2.3.5. Insert the mutated individuals into P'
             new_population.append(first_new_ind)
 

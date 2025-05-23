@@ -32,7 +32,6 @@ K_TOURNEMENT_SELECTION=5,
 SELECTION_ALGORITHM=tournament_selection,
 XO_PROB=0.9,
 MUT_PROB=0.4,
-MUT_MAX_WINDOW_SIZE=5, 
 ELITISM = True,
 VERBOSE = False,
 ):
@@ -41,13 +40,6 @@ VERBOSE = False,
     folder_path = "results"
     os.makedirs(folder_path, exist_ok=True)
 
-    initial_population = [
-    LUGASolution(
-        crossover_function=CROSSOVER_FUNCTION,
-        mutation_function=MUTATION_FUNCTION
-    )
-    for _ in range(POP_SIZE)
-    ]
 
     best_solutions = []
     fitness_histories = []
@@ -59,6 +51,14 @@ VERBOSE = False,
         start_time = time.time()
 
         print(f'\nIteration {i} of the genetic algorithm\n')
+
+        initial_population = [
+        LUGASolution(
+            crossover_function=CROSSOVER_FUNCTION,
+            mutation_function=MUTATION_FUNCTION
+        )
+        for _ in range(POP_SIZE)
+        ]
         
         best_solution, fitness_history = genetic_algorithm(
             initial_population=initial_population,
@@ -68,7 +68,6 @@ VERBOSE = False,
             maximization = True,
             xo_prob = XO_PROB,
             mut_prob = MUT_PROB,
-            mut_max_window_size=MUT_MAX_WINDOW_SIZE,
             elitism = ELITISM,
             verbose = VERBOSE,
         )
@@ -116,13 +115,6 @@ VERBOSE = False,
     folder_path = "results"
     os.makedirs(folder_path, exist_ok=True)
 
-    initial_population = [
-    LUKAPGASolution(
-        crossover_function=CROSSOVER_FUNCTION,
-        mutation_function=MUTATION_FUNCTION
-    )
-    for _ in range(POP_SIZE)
-    ]
 
     best_solutions = []
     fitness_histories = []
@@ -134,6 +126,15 @@ VERBOSE = False,
         start_time = time.time()
 
         print(f'\nIteration {i} of the genetic algorithm\n')
+
+            
+        initial_population = [
+        LUKAPGASolution(
+            crossover_function=CROSSOVER_FUNCTION,
+            mutation_function=MUTATION_FUNCTION
+        )
+        for _ in range(POP_SIZE)
+        ]
         
         best_solution, fitness_history = genetic_algorithm(
             initial_population=initial_population,
@@ -241,7 +242,6 @@ VERBOSE = False,
     folder_path = "results"
     os.makedirs(folder_path, exist_ok=True)
 
-    initial_sol = LUSASolution()
 
     best_solutions = []
     fitness_histories = []
@@ -253,6 +253,8 @@ VERBOSE = False,
         start_time = time.time()
 
         print(f'\nIteration {i} of the SA algorithm\n')
+        initial_sol = LUSASolution()
+
         
         best_solution, fitness_history = simulated_annealing(
             initial_solution=initial_sol,
@@ -367,7 +369,7 @@ def boxplots_final_fitness(results_input, legend=True, box_color="#4C72B0"):
     ax.set_xticklabels([str(i) for i in positions], fontsize=11)
     ax.set_xlabel("Experiment number", fontsize=13)
     ax.set_ylabel("Final Fitness", fontsize=13)
-    ax.set_title("Final Fitness Distribution per Operator Combination", fontsize=15, weight='bold')
+    ax.set_title("Final Fitness Distribution per Parameter Combination", fontsize=15, weight='bold')
 
     ax.grid(True, axis='y', linestyle='--', alpha=0.3)
     ax.spines['top'].set_visible(False)
